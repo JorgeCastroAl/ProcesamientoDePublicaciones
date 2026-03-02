@@ -1,0 +1,96 @@
+﻿{
+    "schema":  [
+                   {
+                       "system":  false,
+                       "id":  "bot_account_id",
+                       "name":  "bot_account_id",
+                       "type":  "relation",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "bot_accounts",
+                                       "cascadeDelete":  true,
+                                       "minSelect":  null,
+                                       "maxSelect":  1,
+                                       "displayFields":  null
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "account_to_follow_id",
+                       "name":  "account_to_follow_id",
+                       "type":  "relation",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "accounts_to_follow",
+                                       "cascadeDelete":  true,
+                                       "minSelect":  null,
+                                       "maxSelect":  1,
+                                       "displayFields":  null
+                                   }
+                   }
+               ],
+    "records":  [
+                    {
+                        "account_to_follow_id":  "9373bd035a92421",
+                        "bot_account_id":  "bf06da7d51bd457",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "c3a052dbb1fc46f",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    },
+                    {
+                        "account_to_follow_id":  "a7c62d784d87439",
+                        "bot_account_id":  "bf06da7d51bd457",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "d36a1ccf2c7c45c",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    },
+                    {
+                        "account_to_follow_id":  "c8f61e349bbf416",
+                        "bot_account_id":  "bf06da7d51bd457",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "5fa36e36c991422",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    },
+                    {
+                        "account_to_follow_id":  "17587f9d2bee441",
+                        "bot_account_id":  "11051c8494f344a",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "d6e06e53917c469",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    },
+                    {
+                        "account_to_follow_id":  "119f6c7db2a94e6",
+                        "bot_account_id":  "11051c8494f344a",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "47df40194413413",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    },
+                    {
+                        "account_to_follow_id":  "9373bd035a92421",
+                        "bot_account_id":  "11051c8494f344a",
+                        "collectionId":  "bot_account_follows",
+                        "collectionName":  "bot_account_follows",
+                        "created":  "2026-02-25 18:36:31.944Z",
+                        "id":  "31fb80a39893421",
+                        "updated":  "2026-02-25 18:36:31.944Z"
+                    }
+                ],
+    "totalRecords":  6,
+    "backupDate":  "2026-02-28 13:18:41",
+    "collection":  "bot_account_follows",
+    "collectionId":  "bot_account_follows"
+}

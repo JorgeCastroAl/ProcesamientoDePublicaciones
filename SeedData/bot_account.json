@@ -1,0 +1,102 @@
+﻿{
+    "schema":  [
+                   {
+                       "system":  false,
+                       "id":  "legacy_id",
+                       "name":  "legacy_id",
+                       "type":  "number",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "noDecimal":  false
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "username",
+                       "name":  "username",
+                       "type":  "text",
+                       "required":  true,
+                       "presentable":  true,
+                       "unique":  true,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  ""
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "password",
+                       "name":  "password",
+                       "type":  "text",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  ""
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "description",
+                       "name":  "description",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  ""
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "is_active",
+                       "name":  "is_active",
+                       "type":  "bool",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+
+                                   }
+                   }
+               ],
+    "records":  [
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-02-25 18:28:54.752Z",
+                        "description":  "Nueva cuenta bot",
+                        "id":  "bf06da7d51bd457",
+                        "is_active":  true,
+                        "legacy_id":  1,
+                        "password":  "TikKarlos6555@",
+                        "updated":  "2026-02-25 18:28:54.752Z",
+                        "username":  "hottiktok380"
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-02-25 18:28:54.752Z",
+                        "description":  "Nueva cuenta bot 2",
+                        "id":  "11051c8494f344a",
+                        "is_active":  true,
+                        "legacy_id":  2,
+                        "password":  "hottiktok381_2",
+                        "updated":  "2026-02-25 18:28:54.752Z",
+                        "username":  "jorge77721@gmail.com"
+                    }
+                ],
+    "totalRecords":  2,
+    "backupDate":  "2026-02-28 13:18:40",
+    "collection":  "bot_account",
+    "collectionId":  "bot_accounts"
+}

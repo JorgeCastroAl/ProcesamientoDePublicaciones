@@ -1,0 +1,13 @@
+﻿{
+    "totalCollections":  6,
+    "pocketbaseUrl":  "http://127.0.0.1:8090",
+    "collections":  [
+                        "accounts_to_follow",
+                        "bot_account",
+                        "video",
+                        "comments",
+                        "response",
+                        "bot_account_follows"
+                    ],
+    "backupDate":  "2026-02-28 13:18:41"
+}

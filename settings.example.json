@@ -1,0 +1,17 @@
+{
+  "pocketbase_url": "http://127.0.0.1:8090",
+  "pocketbase_admin_email": "your_email@example.com",
+  "pocketbase_admin_password": "YOUR_PASSWORD",
+  "assemblyai_api_key": "YOUR_ASSEMBLYAI_API_KEY_HERE",
+  "response_api_url": "http://localhost:9090/api/opinion/generate-comment",
+  "ffmpeg_path": "ffmpeg.exe",
+  "extraction_interval_minutes": 60,
+  "processing_retry_count": 3,
+  "processing_poll_interval_seconds": 30,
+  "temp_directory": "C:\\Users\\YOUR_USERNAME\\AppData\\Local\\TikTokManager\\temp",
+  "comments_extraction_limit": 12,
+  "skip_transcription": false,
+  "recreate_database": true,
+  "seed_data_restore_enabled": false,
+  "seed_data_directory": "SeedData"
+}
