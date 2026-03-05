@@ -16,6 +16,22 @@
                    },
                    {
                        "system":  false,
+                       "id":  "social_network_id",
+                       "name":  "social_network_id",
+                       "type":  "relation",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "social_network",
+                                       "cascadeDelete":  false,
+                                       "minSelect":  null,
+                                       "maxSelect":  1,
+                                       "displayFields":  null
+                                   }
+                   },
+                   {
+                       "system":  false,
                        "id":  "username",
                        "name":  "username",
                        "type":  "text",
@@ -30,10 +46,24 @@
                    },
                    {
                        "system":  false,
+                       "id":  "credentials",
+                       "name":  "credentials",
+                       "type":  "text",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  ""
+                                   }
+                   },
+                   {
+                       "system":  false,
                        "id":  "password",
                        "name":  "password",
                        "type":  "text",
-                       "required":  true,
+                       "required":  false,
                        "presentable":  false,
                        "unique":  false,
                        "options":  {
@@ -58,6 +88,62 @@
                    },
                    {
                        "system":  false,
+                       "id":  "affinity_level",
+                       "name":  "affinity_level",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  "^(IMPARCIAL|FANATICO|PARCIALIZADO)?$"
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "mood_state",
+                       "name":  "mood_state",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  "^(ALEGRE|MOLESTO|EUFORICO)?$"
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "personality_type",
+                       "name":  "personality_type",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  "^(AMABLE|CONFRONTACIONAL|TECNICO)?$"
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "gender",
+                       "name":  "gender",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  "^(MUJER|HOMBRE|NEUTRO)?$"
+                                   }
+                   },
+                   {
+                       "system":  false,
                        "id":  "is_active",
                        "name":  "is_active",
                        "type":  "bool",
@@ -66,6 +152,22 @@
                        "unique":  false,
                        "options":  {
 
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "accounts_to_follow_ids",
+                       "name":  "accounts_to_follow_ids",
+                       "type":  "relation",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "account_to_follow",
+                                       "cascadeDelete":  false,
+                                       "minSelect":  null,
+                                       "maxSelect":  null,
+                                       "displayFields":  null
                                    }
                    }
                ],
@@ -78,9 +180,18 @@
                         "id":  "bf06da7d51bd457",
                         "is_active":  true,
                         "legacy_id":  1,
+                        "credentials":  "hottiktok380",
                         "password":  "TikKarlos6555@",
+                        "affinity_level":  "IMPARCIAL",
+                        "mood_state":  "ALEGRE",
+                        "personality_type":  "AMABLE",
+                        "gender":  "HOMBRE",
                         "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "hottiktok380"
+                        "username":  "hottiktok380",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
                     },
                     {
                         "collectionId":  "bot_accounts",
@@ -90,9 +201,18 @@
                         "id":  "11051c8494f344a",
                         "is_active":  true,
                         "legacy_id":  2,
+                        "credentials":  "jorge77721@gmail.com",
                         "password":  "hottiktok381_2",
+                        "affinity_level":  "FANATICO",
+                        "mood_state":  "EUFORICO",
+                        "personality_type":  "CONFRONTACIONAL",
+                        "gender":  "MUJER",
                         "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "jorge77721@gmail.com"
+                        "username":  "jorge77721@gmail.com",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
                     }
                 ],
     "totalRecords":  2,

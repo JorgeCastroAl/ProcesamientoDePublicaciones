@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using VideoProcessingSystemV2.Services;
+using FluxAnswer.Services;
 
-namespace VideoProcessingSystemV2.SystemTray
+namespace FluxAnswer.SystemTray
 {
     public class StatusWindow : Form
     {
@@ -143,3 +143,4 @@ namespace VideoProcessingSystemV2.SystemTray
         }
     }
 }
+

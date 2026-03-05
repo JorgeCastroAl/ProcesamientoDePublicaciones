@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using VideoProcessingSystemV2.Configuration;
-using VideoProcessingSystemV2.Services;
+using FluxAnswer.Configuration;
+using FluxAnswer.Services;
 using Serilog;
 
-namespace VideoProcessingSystemV2.SystemTray
+namespace FluxAnswer.SystemTray
 {
     public class AdminWindow : Form
     {
@@ -53,7 +53,7 @@ namespace VideoProcessingSystemV2.SystemTray
             _refreshTimer.Tick += OnRefreshTick;
             _refreshTimer.Start();
             
-            UpdateStatistics();
+            _ = UpdateStatistics();
         }
 
         private void InitializeComponents()
@@ -196,9 +196,9 @@ namespace VideoProcessingSystemV2.SystemTray
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };
-            _startServiceBtn = CreateButton("▶ Start", OnStartService, Color.FromArgb(0, 120, 0));
-            _stopServiceBtn = CreateButton("■ Stop", OnStopService, Color.FromArgb(180, 0, 0));
-            _restartServiceBtn = CreateButton("↻ Restart", OnRestartService, Color.FromArgb(200, 120, 0));
+            _startServiceBtn = CreateButton("Start", OnStartService, Color.FromArgb(0, 120, 0));
+            _stopServiceBtn = CreateButton("Stop", OnStopService, Color.FromArgb(180, 0, 0));
+            _restartServiceBtn = CreateButton("Restart", OnRestartService, Color.FromArgb(200, 120, 0));
             
             serviceFlow.Controls.Add(_startServiceBtn);
             serviceFlow.Controls.Add(_stopServiceBtn);
@@ -224,9 +224,9 @@ namespace VideoProcessingSystemV2.SystemTray
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };
-            _startPbBtn = CreateButton("▶ Start", OnStartPocketBase, Color.FromArgb(0, 100, 0));
-            _stopPbBtn = CreateButton("■ Stop", OnStopPocketBase, Color.FromArgb(150, 0, 0));
-            _restartPbBtn = CreateButton("↻ Restart", OnRestartPocketBase, Color.FromArgb(180, 100, 0));
+            _startPbBtn = CreateButton("Start", OnStartPocketBase, Color.FromArgb(0, 100, 0));
+            _stopPbBtn = CreateButton("Stop", OnStopPocketBase, Color.FromArgb(150, 0, 0));
+            _restartPbBtn = CreateButton("Restart", OnRestartPocketBase, Color.FromArgb(180, 100, 0));
             
             pbFlow.Controls.Add(_startPbBtn);
             pbFlow.Controls.Add(_stopPbBtn);
@@ -365,18 +365,18 @@ namespace VideoProcessingSystemV2.SystemTray
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-            var clearDataBtn = CreateButton("🗑️ Clear Data", OnClearData, Color.FromArgb(180, 0, 0));
+            var clearDataBtn = CreateButton("Clear Data", OnClearData, Color.FromArgb(180, 0, 0));
             clearDataBtn.Width = 120;
             clearDataBtn.Anchor = AnchorStyles.Left;
             
-            var openAdminBtn = CreateButton("🌐 Admin Panel", OnOpenPocketBaseAdmin, Color.FromArgb(0, 80, 150));
+            var openAdminBtn = CreateButton("Admin Panel", OnOpenPocketBaseAdmin, Color.FromArgb(0, 80, 150));
             openAdminBtn.Width = 120;
             openAdminBtn.Anchor = AnchorStyles.Left;
 
             // Save button in the right corner
             var saveBtn = new Button
             {
-                Text = "💾 Save",
+                Text = "Save",
                 Width = 100,
                 Height = 28,
                 BackColor = Color.DodgerBlue,
@@ -520,7 +520,7 @@ namespace VideoProcessingSystemV2.SystemTray
             {
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(1);
-                await client.GetAsync("http://127.0.0.1:8090/");
+                await client.GetAsync(GetPocketBaseBaseUrl() + "/");
                 return true;
             }
             catch
@@ -776,7 +776,7 @@ namespace VideoProcessingSystemV2.SystemTray
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "http://127.0.0.1:8090/_/",
+                    FileName = GetPocketBaseBaseUrl() + "/_/",
                     UseShellExecute = true
                 });
             }
@@ -793,5 +793,17 @@ namespace VideoProcessingSystemV2.SystemTray
             _refreshTimer?.Dispose();
             base.OnFormClosing(e);
         }
+
+        private string GetPocketBaseBaseUrl()
+        {
+            var configuredUrl = _config.PocketBaseUrl;
+            if (string.IsNullOrWhiteSpace(configuredUrl))
+            {
+                return "http://127.0.0.1:8090";
+            }
+
+            return configuredUrl.TrimEnd('/');
+        }
     }
 }
+

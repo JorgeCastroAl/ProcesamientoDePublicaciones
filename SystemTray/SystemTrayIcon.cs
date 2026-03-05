@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using VideoProcessingSystemV2.Configuration;
-using VideoProcessingSystemV2.Services;
+using FluxAnswer.Configuration;
+using FluxAnswer.Services;
 
-namespace VideoProcessingSystemV2.SystemTray
+namespace FluxAnswer.SystemTray
 {
     public class SystemTrayIcon : IDisposable
     {
@@ -200,3 +200,4 @@ namespace VideoProcessingSystemV2.SystemTray
         }
     }
 }
+

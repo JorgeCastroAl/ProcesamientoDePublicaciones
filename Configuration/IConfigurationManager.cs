@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VideoProcessingSystemV2.Configuration
+namespace FluxAnswer.Configuration
 {
     /// <summary>
     /// Manages application configuration loading, validation, and reload on file changes.
@@ -8,6 +8,8 @@ namespace VideoProcessingSystemV2.Configuration
     public interface IConfigurationManager
     {
         string PocketBaseUrl { get; }
+        string PocketBaseBindIp { get; }
+        int PocketBasePort { get; }
         string PocketBaseAdminEmail { get; }
         string PocketBaseAdminPassword { get; }
         string AssemblyAIApiKey { get; }
@@ -18,6 +20,7 @@ namespace VideoProcessingSystemV2.Configuration
         int ProcessingPollIntervalSeconds { get; }
         string TempDirectory { get; }
         int CommentsExtractionLimit { get; }
+        int CustomCommentsPerBotAccount { get; }
         bool SkipTranscription { get; }
         bool RecreateDatabase { get; }
         bool SeedDataRestoreEnabled { get; }
@@ -27,3 +30,4 @@ namespace VideoProcessingSystemV2.Configuration
         event EventHandler ConfigurationChanged;
     }
 }
+

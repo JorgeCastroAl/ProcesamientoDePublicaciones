@@ -1,0 +1,81 @@
+﻿{
+    "schema":  [
+                   {
+                       "system":  false,
+                       "id":  "bot_account_id",
+                       "name":  "bot_account_id",
+                       "type":  "relation",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "bot_accounts",
+                                       "cascadeDelete":  true,
+                                       "minSelect":  null,
+                                       "maxSelect":  1,
+                                       "displayFields":  null
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "video_id",
+                       "name":  "video_id",
+                       "type":  "relation",
+                       "required":  true,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "collectionId":  "videos",
+                                       "cascadeDelete":  true,
+                                       "minSelect":  null,
+                                       "maxSelect":  1,
+                                       "displayFields":  null
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "custom_comment_text",
+                       "name":  "custom_comment_text",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+                                       "min":  null,
+                                       "max":  null,
+                                       "pattern":  ""
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "comment_sent",
+                       "name":  "comment_sent",
+                       "type":  "bool",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+
+                                   }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "priority",
+                       "name":  "priority",
+                       "type":  "bool",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {
+
+                                   }
+                   }
+               ],
+    "records":  [
+
+                ],
+    "totalRecords":  0,
+    "backupDate":  "2026-03-04 00:00:00",
+    "collection":  "bot_account_video",
+    "collectionId":  "bot_account_video"
+}

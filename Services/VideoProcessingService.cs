@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Serilog;
-using VideoProcessingSystemV2.Configuration;
-using VideoProcessingSystemV2.Extraction;
-using VideoProcessingSystemV2.Processing;
+using FluxAnswer.Configuration;
+using FluxAnswer.Extraction;
+using FluxAnswer.Pipeline.TikTok;
 
-namespace VideoProcessingSystemV2.Services
+namespace FluxAnswer.Services
 {
     /// <summary>
     /// Main service controller for video processing system.
@@ -14,7 +14,7 @@ namespace VideoProcessingSystemV2.Services
     {
         private readonly StartupValidator _validator;
         private readonly IExtractionCycleManager _extractionManager;
-        private readonly IProcessingPipelineManager _processingManager;
+        private readonly ITikTokPipelineManager _processingManager;
         private ServiceState _state;
         private readonly object _lock = new object();
 
@@ -47,7 +47,7 @@ namespace VideoProcessingSystemV2.Services
         public VideoProcessingService(
             StartupValidator validator,
             IExtractionCycleManager extractionManager,
-            IProcessingPipelineManager processingManager)
+            ITikTokPipelineManager processingManager)
         {
             _validator = validator;
             _extractionManager = extractionManager;
@@ -165,3 +165,6 @@ namespace VideoProcessingSystemV2.Services
         }
     }
 }
+
+
+

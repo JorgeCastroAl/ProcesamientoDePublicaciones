@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-namespace VideoProcessingSystemV2.Services
+namespace FluxAnswer.Services
 {
     /// <summary>
     /// Main service interface for video processing system.
@@ -26,3 +26,4 @@ namespace VideoProcessingSystemV2.Services
         public string? LastError { get; set; }
     }
 }
+

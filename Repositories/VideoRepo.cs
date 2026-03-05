@@ -1,11 +1,15 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using PocketBase.Framework;
 using PocketBase.Framework.Repository;
 using PocketBase.Framework.Attributes;
-using VideoProcessingSystemV2.Models;
+using PocketBase.Framework.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Repositories
+namespace FluxAnswer.Repositories
 {
     [CollectionName("video")]
     public class VideoRepo : BaseRepository<VideoRecord>, IVideoRepo
@@ -27,7 +31,7 @@ namespace VideoProcessingSystemV2.Repositories
         public async Task<List<VideoRecord>> GetIncompleteVideosAsync()
         {
             // Filtra videos que NO tienen todas las etapas completadas
-            // Un video está incompleto si alguna de estas condiciones es falsa:
+            // Un video estÃ¡ incompleto si alguna de estas condiciones es falsa:
             // - audio_downloaded = false
             // - comments_extracted = false  
             // - response_generated = false
@@ -35,5 +39,20 @@ namespace VideoProcessingSystemV2.Repositories
             var filter = "audio_downloaded=false || comments_extracted=false || response_generated=false";
             return await GetByFilterAsync(filter);
         }
+
+        public async Task<VideoRecord?> GetNextIncompleteVideoAsync()
+        {
+            var filter = "audio_downloaded=false || comments_extracted=false || response_generated=false";
+            var encodedFilter = Uri.EscapeDataString(filter);
+            var url = $"/api/collections/{_collectionName}/records?filter={encodedFilter}&sort=-priority,updated,created&perPage=1&page=1";
+
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<PocketBaseListResponse<VideoRecord>>(content);
+            return result?.Items?.FirstOrDefault();
+        }
     }
 }
+

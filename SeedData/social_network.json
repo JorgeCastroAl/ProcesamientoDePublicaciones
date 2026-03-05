@@ -1,0 +1,57 @@
+{
+  "schema": [
+    {
+      "system": false,
+      "id": "code",
+      "name": "code",
+      "type": "text",
+      "required": true,
+      "presentable": true,
+      "unique": true,
+      "options": {
+        "min": null,
+        "max": null,
+        "pattern": ""
+      }
+    },
+    {
+      "system": false,
+      "id": "name",
+      "name": "name",
+      "type": "text",
+      "required": true,
+      "presentable": true,
+      "unique": false,
+      "options": {
+        "min": null,
+        "max": null,
+        "pattern": ""
+      }
+    },
+    {
+      "system": false,
+      "id": "is_active",
+      "name": "is_active",
+      "type": "bool",
+      "required": false,
+      "presentable": false,
+      "unique": false,
+      "options": {}
+    }
+  ],
+  "records": [
+    { "id": "social_tiktok", "code": "tiktok", "name": "TikTok", "is_active": true },
+    { "id": "social_youtube", "code": "youtube", "name": "YouTube", "is_active": true },
+    { "id": "social_instagr", "code": "instagram", "name": "Instagram", "is_active": true },
+    { "id": "social_facebok", "code": "facebook", "name": "Facebook", "is_active": true },
+    { "id": "social_x_twit", "code": "x", "name": "X (Twitter)", "is_active": true },
+    { "id": "social_linkedn", "code": "linkedin", "name": "LinkedIn", "is_active": true },
+    { "id": "social_threads", "code": "threads", "name": "Threads", "is_active": true },
+    { "id": "social_reddit", "code": "reddit", "name": "Reddit", "is_active": true },
+    { "id": "social_twitch", "code": "twitch", "name": "Twitch", "is_active": true },
+    { "id": "social_discord", "code": "discord", "name": "Discord", "is_active": true }
+  ],
+  "totalRecords": 10,
+  "backupDate": "2026-03-02 00:00:00",
+  "collection": "social_network"
+}

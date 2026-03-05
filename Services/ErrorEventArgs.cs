@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace VideoProcessingSystemV2.Services
+namespace FluxAnswer.Services
 {
     /// <summary>
     /// Event arguments for service errors.
@@ -17,3 +17,4 @@ namespace VideoProcessingSystemV2.Services
         }
     }
 }
+

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Event arguments for extraction cycle completion.
@@ -21,3 +21,4 @@ namespace VideoProcessingSystemV2.Extraction
         public bool HasErrors => Results.Exists(r => !r.IsSuccess);
     }
 }
+

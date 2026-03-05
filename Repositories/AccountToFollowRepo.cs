@@ -1,11 +1,11 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using PocketBase.Framework;
 using PocketBase.Framework.Repository;
 using PocketBase.Framework.Attributes;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Repositories
+namespace FluxAnswer.Repositories
 {
     [CollectionName("account_to_follow")]
     public class AccountToFollowRepo : BaseRepository<AccountToFollow>, IAccountToFollowRepo
@@ -19,3 +19,4 @@ namespace VideoProcessingSystemV2.Repositories
         }
     }
 }
+

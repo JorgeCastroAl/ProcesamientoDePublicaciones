@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Interface for yt-dlp wrapper.
@@ -14,3 +14,4 @@ namespace VideoProcessingSystemV2.Extraction
         Task<List<CommentData>> ExtractCommentsAsync(string videoUrl);
     }
 }
+

@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using Newtonsoft.Json;
 using PocketBase.Framework.Attributes;
 
-namespace VideoProcessingSystemV2.Models
+namespace FluxAnswer.Models
 {
     /// <summary>
     /// Join collection between bot accounts and accounts to follow.
@@ -39,3 +39,4 @@ namespace VideoProcessingSystemV2.Models
         }
     }
 }
+

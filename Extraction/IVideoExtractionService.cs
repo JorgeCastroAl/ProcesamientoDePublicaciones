@@ -1,7 +1,7 @@
-using System.Threading.Tasks;
-using VideoProcessingSystemV2.Models;
+﻿using System.Threading.Tasks;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Service for extracting video metadata from TikTok accounts.
@@ -11,3 +11,4 @@ namespace VideoProcessingSystemV2.Extraction
         Task<ExtractionResult> ExtractVideosAsync(AccountToFollow account);
     }
 }
+

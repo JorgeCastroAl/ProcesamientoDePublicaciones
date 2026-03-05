@@ -1,4 +1,4 @@
-namespace VideoProcessingSystemV2.Services
+﻿namespace FluxAnswer.Services
 {
     /// <summary>
     /// Represents the state of the video processing service.
@@ -12,3 +12,4 @@ namespace VideoProcessingSystemV2.Services
         Error
     }
 }
+

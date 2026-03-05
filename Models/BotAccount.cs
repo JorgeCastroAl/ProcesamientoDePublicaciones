@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PocketBase.Framework.Attributes;
 
-namespace VideoProcessingSystemV2.Models
+namespace FluxAnswer.Models
 {
     /// <summary>
     /// Represents a bot account used for posting responses.
@@ -18,6 +18,10 @@ namespace VideoProcessingSystemV2.Models
         [JsonProperty("legacy_id")]
         [PocketBaseField(FieldType = "number", Required = false)]
         public int? LegacyId { get; set; }
+
+        [JsonProperty("social_network_id")]
+        [PocketBaseField(FieldType = "relation", RelationCollection = "social_network", Required = false)]
+        public string? SocialNetworkId { get; set; }
 
         [JsonProperty("username")]
         [Required]
@@ -38,19 +42,19 @@ namespace VideoProcessingSystemV2.Models
         public string? Description { get; set; }
 
         [JsonProperty("affinity_level")]
-        [PocketBaseField(FieldType = "text", Required = false)]
+        [PocketBaseField(FieldType = "text", Required = false, Pattern = "^(IMPARCIAL|FANATICO|PARCIALIZADO)?$")]
         public string? AffinityLevel { get; set; }
 
         [JsonProperty("mood_state")]
-        [PocketBaseField(FieldType = "text", Required = false)]
+        [PocketBaseField(FieldType = "text", Required = false, Pattern = "^(ALEGRE|MOLESTO|EUFORICO)?$")]
         public string? MoodState { get; set; }
 
         [JsonProperty("personality_type")]
-        [PocketBaseField(FieldType = "text", Required = false)]
+        [PocketBaseField(FieldType = "text", Required = false, Pattern = "^(AMABLE|CONFRONTACIONAL|TECNICO)?$")]
         public string? PersonalityType { get; set; }
 
         [JsonProperty("gender")]
-        [PocketBaseField(FieldType = "text", Required = false)]
+        [PocketBaseField(FieldType = "text", Required = false, Pattern = "^(MUJER|HOMBRE|NEUTRO)?$")]
         public string? Gender { get; set; }
 
         [JsonProperty("is_active")]
@@ -78,3 +82,4 @@ namespace VideoProcessingSystemV2.Models
         }
     }
 }
+

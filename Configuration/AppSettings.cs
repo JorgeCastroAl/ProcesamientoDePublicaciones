@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace VideoProcessingSystemV2.Configuration
+namespace FluxAnswer.Configuration
 {
     /// <summary>
     /// Application settings model for JSON deserialization.
@@ -9,6 +9,12 @@ namespace VideoProcessingSystemV2.Configuration
     {
         [JsonProperty("pocketbase_url")]
         public string? PocketBaseUrl { get; set; }
+
+        [JsonProperty("pocketbase_bind_ip")]
+        public string? PocketBaseBindIp { get; set; }
+
+        [JsonProperty("pocketbase_port")]
+        public int? PocketBasePort { get; set; }
 
         [JsonProperty("pocketbase_admin_email")]
         public string? PocketBaseAdminEmail { get; set; }
@@ -40,6 +46,9 @@ namespace VideoProcessingSystemV2.Configuration
         [JsonProperty("comments_extraction_limit")]
         public int? CommentsExtractionLimit { get; set; }
 
+        [JsonProperty("custom_comments_per_bot_account")]
+        public int? CustomCommentsPerBotAccount { get; set; }
+
         [JsonProperty("skip_transcription")]
         public bool? SkipTranscription { get; set; }
 
@@ -53,3 +62,4 @@ namespace VideoProcessingSystemV2.Configuration
         public string? SeedDataDirectory { get; set; }
     }
 }
+

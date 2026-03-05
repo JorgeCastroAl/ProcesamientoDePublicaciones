@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PocketBase.Framework.Attributes;
 
-namespace VideoProcessingSystemV2.Models
+namespace FluxAnswer.Models
 {
     /// <summary>
     /// Represents a TikTok account to follow and extract videos from.
@@ -17,6 +17,10 @@ namespace VideoProcessingSystemV2.Models
         [JsonProperty("legacy_id")]
         [PocketBaseField(FieldType = "number", Required = false)]
         public int? LegacyId { get; set; }
+
+        [JsonProperty("social_network_id")]
+        [PocketBaseField(FieldType = "relation", RelationCollection = "social_network", Required = false)]
+        public string? SocialNetworkId { get; set; }
 
         [JsonProperty("username")]
         [Required]
@@ -37,7 +41,7 @@ namespace VideoProcessingSystemV2.Models
         public int? Type { get; set; }
 
         [JsonProperty("profile_type_display")]
-        [PocketBaseField(FieldType = "text", Required = false)]
+        [PocketBaseField(FieldType = "text", Required = false, Pattern = "^(PERSONA|PARTIDO|NOTICIERO)?$")]
         public string? TypeDisplay { get; set; }
 
         [JsonProperty("is_active")]
@@ -61,3 +65,4 @@ namespace VideoProcessingSystemV2.Models
         }
     }
 }
+

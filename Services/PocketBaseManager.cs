@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace VideoProcessingSystemV2.Services
+namespace FluxAnswer.Services
 {
     /// <summary>
     /// Manages the PocketBase process lifecycle.
@@ -14,9 +14,16 @@ namespace VideoProcessingSystemV2.Services
         private Process? _pocketBaseProcess;
         private readonly string _pocketBasePath;
         private readonly string _dataDirectory;
+        private readonly string _bindIp;
+        private readonly int _port;
+        private readonly string _healthCheckUrl;
         private bool _isManaged;
 
-        public PocketBaseManager(string? pocketBasePath = null, string? dataDirectory = null)
+        public PocketBaseManager(
+            string? pocketBasePath = null,
+            string? dataDirectory = null,
+            string? bindIp = null,
+            int? port = null)
         {
             // Default paths
             _pocketBasePath = pocketBasePath ?? FindPocketBaseExecutable();
@@ -25,6 +32,12 @@ namespace VideoProcessingSystemV2.Services
                 "TikTokManager",
                 "pocketbase_data"
             );
+
+            _bindIp = string.IsNullOrWhiteSpace(bindIp) ? "0.0.0.0" : bindIp.Trim();
+            _port = port is > 0 and <= 65535 ? port.Value : 8090;
+
+            var healthCheckHost = IsAnyAddress(_bindIp) ? "127.0.0.1" : _bindIp;
+            _healthCheckUrl = $"http://{healthCheckHost}:{_port}/";
         }
 
         /// <summary>
@@ -54,6 +67,7 @@ namespace VideoProcessingSystemV2.Services
 
                 Log.Information("Starting PocketBase from: {Path}", _pocketBasePath);
                 Log.Information("Data directory: {DataDir}", _dataDirectory);
+                Log.Information("Bind endpoint: {BindEndpoint}", $"http://{_bindIp}:{_port}");
 
                 // Start PocketBase process
                 _pocketBaseProcess = new Process
@@ -61,7 +75,7 @@ namespace VideoProcessingSystemV2.Services
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = _pocketBasePath,
-                        Arguments = $"serve --dir \"{_dataDirectory}\"",
+                        Arguments = $"serve --http \"{_bindIp}:{_port}\" --dir \"{_dataDirectory}\"",
                         UseShellExecute = false,
                         CreateNoWindow = true,
                         RedirectStandardOutput = true,
@@ -100,7 +114,7 @@ namespace VideoProcessingSystemV2.Services
                 {
                     if (await IsPocketBaseRunningAsync())
                     {
-                        Log.Information("PocketBase started successfully on http://127.0.0.1:8090");
+                        Log.Information("PocketBase started successfully. Health check URL: {HealthCheckUrl}", _healthCheckUrl);
                         return true;
                     }
                     
@@ -148,7 +162,7 @@ namespace VideoProcessingSystemV2.Services
             {
                 using var client = new System.Net.Http.HttpClient();
                 client.Timeout = TimeSpan.FromSeconds(2);
-                var response = await client.GetAsync("http://127.0.0.1:8090/");
+                var response = await client.GetAsync(_healthCheckUrl);
                 // Any HTTP response (including 404) means PocketBase is running
                 return true;
             }
@@ -188,6 +202,13 @@ namespace VideoProcessingSystemV2.Services
             return Path.Combine(Environment.CurrentDirectory, "pocketbase.exe");
         }
 
+        private static bool IsAnyAddress(string ip)
+        {
+            return string.Equals(ip, "0.0.0.0", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(ip, "::", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(ip, "[::]", StringComparison.OrdinalIgnoreCase);
+        }
+
         public void Dispose()
         {
             Stop();
@@ -195,3 +216,4 @@ namespace VideoProcessingSystemV2.Services
         }
     }
 }
+

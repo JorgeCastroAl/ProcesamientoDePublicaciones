@@ -1,12 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using PocketBase.Framework.Repository;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Repositories
+namespace FluxAnswer.Repositories
 {
     public interface IAccountToFollowRepo : IRepository<AccountToFollow>
     {
         Task<AccountToFollow?> GetByUsernameAsync(string username);
     }
 }
+

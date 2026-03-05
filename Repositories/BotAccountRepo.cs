@@ -1,12 +1,12 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using PocketBase.Framework;
 using PocketBase.Framework.Repository;
 using PocketBase.Framework.Attributes;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Repositories
+namespace FluxAnswer.Repositories
 {
     [CollectionName("bot_account")]
     public class BotAccountRepo : BaseRepository<BotAccount>, IBotAccountRepo
@@ -23,3 +23,4 @@ namespace VideoProcessingSystemV2.Repositories
         }
     }
 }
+

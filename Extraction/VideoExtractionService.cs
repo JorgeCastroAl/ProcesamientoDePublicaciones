@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
-using VideoProcessingSystemV2.Repositories;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Repositories;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Service for extracting videos from TikTok accounts using yt-dlp.
@@ -14,11 +14,14 @@ namespace VideoProcessingSystemV2.Extraction
     {
         private readonly IVideoRepo _videoRepo;
         private readonly IYtDlpWrapper _ytDlp;
+        private readonly ISocialNetworkRepo _socialNetworkRepo;
+        private string? _tiktokSocialNetworkId;
 
-        public VideoExtractionService(IVideoRepo videoRepo, IYtDlpWrapper ytDlp)
+        public VideoExtractionService(IVideoRepo videoRepo, IYtDlpWrapper ytDlp, ISocialNetworkRepo socialNetworkRepo)
         {
             _videoRepo = videoRepo;
             _ytDlp = ytDlp;
+            _socialNetworkRepo = socialNetworkRepo;
         }
 
         public async Task<ExtractionResult> ExtractVideosAsync(AccountToFollow account)
@@ -47,6 +50,7 @@ namespace VideoProcessingSystemV2.Extraction
                 }
 
                 // Process each video in reverse chronological order (newest first)
+                var socialNetworkId = await GetTikTokSocialNetworkIdAsync();
                 foreach (var video in videos)
                 {
                     try
@@ -65,6 +69,7 @@ namespace VideoProcessingSystemV2.Extraction
                         var videoRecord = new VideoRecord
                         {
                             TiktokVideoId = video.Id,
+                            SocialNetworkId = socialNetworkId,
                             AccountUsername = account.Username,
                             VideoUrl = video.WebpageUrl,
                             Title = video.Title,
@@ -123,5 +128,28 @@ namespace VideoProcessingSystemV2.Extraction
                 return 10;
             }
         }
+
+        private async Task<string?> GetTikTokSocialNetworkIdAsync()
+        {
+            if (!string.IsNullOrWhiteSpace(_tiktokSocialNetworkId))
+                return _tiktokSocialNetworkId;
+
+            try
+            {
+                var network = await _socialNetworkRepo.GetByCodeAsync("tiktok");
+                _tiktokSocialNetworkId = network?.Id;
+
+                if (string.IsNullOrWhiteSpace(_tiktokSocialNetworkId))
+                    Log.Warning("Social network 'tiktok' not found. New video records will be created without social_network_id.");
+
+                return _tiktokSocialNetworkId;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to resolve social network id for 'tiktok'");
+                return null;
+            }
+        }
     }
 }
+

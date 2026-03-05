@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Manages the extraction cycle that runs periodically to extract videos from accounts.
@@ -14,3 +14,4 @@ namespace VideoProcessingSystemV2.Extraction
         event EventHandler<ExtractionCompletedEventArgs> ExtractionCompleted;
     }
 }
+

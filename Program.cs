@@ -6,18 +6,22 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using PocketBase.Framework;
 using PocketBase.Framework.SchemaSync;
-using VideoProcessingSystemV2.Configuration;
-using VideoProcessingSystemV2.Repositories;
-using VideoProcessingSystemV2.Extraction;
-using VideoProcessingSystemV2.Processing;
-using VideoProcessingSystemV2.Services;
-using VideoProcessingSystemV2.SystemTray;
+using FluxAnswer.Configuration;
+using FluxAnswer.Repositories;
+using FluxAnswer.Extraction;
+using FluxAnswer.Pipeline.TikTok;
+using FluxAnswer.Services;
+using FluxAnswer.Services.Api;
+using FluxAnswer.Services.AI;
+using FluxAnswer.Services.Media;
+using FluxAnswer.Services.Scraping.TikTok;
+using FluxAnswer.Services.Database;
+using FluxAnswer.Services.Pipeline;
+using FluxAnswer.SystemTray;
 
-namespace VideoProcessingSystemV2
+namespace FluxAnswer
 {
     class Program
     {
@@ -49,9 +53,15 @@ namespace VideoProcessingSystemV2
             {
                 Log.Information("========== Video Processing System V2 Starting ==========");
 
+                // Load configuration first (needed for PocketBase bind settings and credentials)
+                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+                var configManager = new ConfigurationManager(configPath);
+
                 // Start PocketBase
                 Log.Information("Initializing PocketBase...");
-                pocketBaseManager = new PocketBaseManager();
+                pocketBaseManager = new PocketBaseManager(
+                    bindIp: configManager.PocketBaseBindIp,
+                    port: configManager.PocketBasePort);
                 var pocketBaseStarted = await pocketBaseManager.StartAsync();
                 
                 if (!pocketBaseStarted)
@@ -72,10 +82,6 @@ namespace VideoProcessingSystemV2
                 // Sync PocketBase schema with models
                 Log.Information("Synchronizing PocketBase schema...");
                 
-                // Load configuration first to get PocketBase credentials
-                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
-                var configManager = new ConfigurationManager(configPath);
-                
                 var pbOptions = new PocketBaseOptions
                 {
                     Url = configManager.PocketBaseUrl,
@@ -94,13 +100,15 @@ namespace VideoProcessingSystemV2
                 
                 if (!syncSuccess)
                 {
+                    var syncFailureReason = syncService.LastError;
+
                     if (shouldBlockStartupOnSyncError)
                     {
-                        Log.Error("Schema synchronization or seed data restoration failed. Application startup aborted.");
+                        Log.Error("Schema synchronization or seed data restoration failed. Application startup aborted. Reason: {SyncFailureReason}", syncFailureReason ?? "n/a");
                         MessageBox.Show(
                             "Schema synchronization or seed data restoration failed.\n\n" +
                             "The service will NOT start to avoid processing with incomplete data.\n" +
-                            "Check logs and fix restore errors before retrying.",
+                            $"Reason: {syncFailureReason ?? "See logs for details."}",
                             "Startup Blocked",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
@@ -121,11 +129,6 @@ namespace VideoProcessingSystemV2
                 else
                 {
                     Log.Information("Schema synchronization completed successfully");
-
-                    if (pbOptions.RecreateDatabase && pbOptions.EnableSeedDataRestore)
-                    {
-                        TryDisableRecreateDatabaseFlag(configPath);
-                    }
                 }
 
                 // Build DI container
@@ -240,14 +243,14 @@ namespace VideoProcessingSystemV2
             // Repositories
             services.AddSingleton<IVideoRepo>(sp => 
                 new VideoRepo(sp.GetRequiredService<PocketBaseOptions>()));
-            services.AddSingleton<ICommentRepo>(sp => 
-                new CommentRepo(sp.GetRequiredService<PocketBaseOptions>()));
-            services.AddSingleton<IResponseRepo>(sp => 
-                new ResponseRepo(sp.GetRequiredService<PocketBaseOptions>()));
+            services.AddSingleton<IBotAccountVideoRepo>(sp =>
+                new BotAccountVideoRepo(sp.GetRequiredService<PocketBaseOptions>()));
             services.AddSingleton<IBotAccountRepo>(sp => 
                 new BotAccountRepo(sp.GetRequiredService<PocketBaseOptions>()));
             services.AddSingleton<IAccountToFollowRepo>(sp => 
                 new AccountToFollowRepo(sp.GetRequiredService<PocketBaseOptions>()));
+            services.AddSingleton<ISocialNetworkRepo>(sp =>
+                new SocialNetworkRepo(sp.GetRequiredService<PocketBaseOptions>()));
 
             // Extraction services
             services.AddSingleton<IYtDlpWrapper, YtDlpWrapperV2>();
@@ -255,7 +258,8 @@ namespace VideoProcessingSystemV2
             {
                 var videoRepo = sp.GetRequiredService<IVideoRepo>();
                 var ytDlp = sp.GetRequiredService<IYtDlpWrapper>();
-                return new VideoExtractionService(videoRepo, ytDlp);
+                var socialNetworkRepo = sp.GetRequiredService<ISocialNetworkRepo>();
+                return new VideoExtractionService(videoRepo, ytDlp, socialNetworkRepo);
             });
             services.AddSingleton<IExtractionCycleManager>(sp =>
             {
@@ -273,29 +277,38 @@ namespace VideoProcessingSystemV2
                 var config = sp.GetRequiredService<IConfigurationManager>();
                 return new TranscriptionService(config.AssemblyAIApiKey);
             });
+            services.AddSingleton<IAudioStageService, AudioStageService>();
+            services.AddSingleton<ITranscriptionStageService, TranscriptionStageService>();
+            services.AddSingleton<IBotAccountVideoStageService, BotAccountVideoStageService>();
             services.AddSingleton<IResponseGenerationService>(sp =>
             {
                 var config = sp.GetRequiredService<IConfigurationManager>();
-                return new ResponseGenerationService(config.ResponseApiUrl);
+                var botAccountRepo = sp.GetRequiredService<IBotAccountRepo>();
+                var botAccountVideoRepo = sp.GetRequiredService<IBotAccountVideoRepo>();
+                return new ResponseGenerationService(config.ResponseApiUrl, botAccountRepo, botAccountVideoRepo);
             });
-            services.AddSingleton<IProcessingPipelineManager>(sp =>
+            services.AddSingleton<IVideoResponseStageService>(sp =>
             {
                 var videoRepo = sp.GetRequiredService<IVideoRepo>();
-                var commentRepo = sp.GetRequiredService<ICommentRepo>();
-                var responseRepo = sp.GetRequiredService<IResponseRepo>();
-                var audioService = sp.GetRequiredService<IAudioDownloadService>();
-                var commentsService = sp.GetRequiredService<ICommentsExtractionService>();
-                var transcriptionService = sp.GetRequiredService<ITranscriptionService>();
                 var responseService = sp.GetRequiredService<IResponseGenerationService>();
+                return new VideoResponseStageService(videoRepo, responseService);
+            });
+            services.AddSingleton<ITikTokPipelineManager>(sp =>
+            {
+                var videoRepo = sp.GetRequiredService<IVideoRepo>();
+                var commentsService = sp.GetRequiredService<ICommentsExtractionService>();
+                var audioStageService = sp.GetRequiredService<IAudioStageService>();
+                var transcriptionStageService = sp.GetRequiredService<ITranscriptionStageService>();
+                var responseStageService = sp.GetRequiredService<IVideoResponseStageService>();
+                var botAccountVideoStageService = sp.GetRequiredService<IBotAccountVideoStageService>();
                 var config = sp.GetRequiredService<IConfigurationManager>();
-                return new ProcessingPipelineManager(
+                return new TikTokPipelineManager(
                     videoRepo,
-                    commentRepo,
-                    responseRepo,
-                    audioService,
                     commentsService,
-                    transcriptionService,
-                    responseService,
+                    audioStageService,
+                    transcriptionStageService,
+                    responseStageService,
+                    botAccountVideoStageService,
                     config
                 );
             });
@@ -305,75 +318,12 @@ namespace VideoProcessingSystemV2
             {
                 var validator = sp.GetRequiredService<StartupValidator>();
                 var extractionManager = sp.GetRequiredService<IExtractionCycleManager>();
-                var processingManager = sp.GetRequiredService<IProcessingPipelineManager>();
+                var processingManager = sp.GetRequiredService<ITikTokPipelineManager>();
                 return new VideoProcessingService(validator, extractionManager, processingManager);
             });
         }
-
-        private static void TryDisableRecreateDatabaseFlag(string configPath)
-        {
-            try
-            {
-                var updatedAny = false;
-
-                if (UpdateRecreateFlagInSettingsFile(configPath))
-                {
-                    updatedAny = true;
-                    Log.Information("Auto-updated runtime settings.json: recreate_database set to false ({ConfigPath})", configPath);
-                }
-
-                var projectSettingsPath = FindProjectSettingsPath(configPath);
-                if (!string.IsNullOrWhiteSpace(projectSettingsPath) &&
-                    !string.Equals(projectSettingsPath, configPath, StringComparison.OrdinalIgnoreCase) &&
-                    UpdateRecreateFlagInSettingsFile(projectSettingsPath))
-                {
-                    updatedAny = true;
-                    Log.Information("Auto-updated project settings.json: recreate_database set to false ({ProjectSettingsPath})", projectSettingsPath);
-                }
-
-                if (!updatedAny)
-                {
-                    Log.Information("recreate_database already false or settings file not found; no auto-update needed");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Warning(ex, "Failed to auto-update recreate_database in settings.json");
-            }
-        }
-
-        private static bool UpdateRecreateFlagInSettingsFile(string settingsPath)
-        {
-            if (!File.Exists(settingsPath))
-                return false;
-
-            var json = File.ReadAllText(settingsPath);
-            var settings = JObject.Parse(json);
-            var currentValue = settings["recreate_database"]?.Value<bool>() ?? false;
-            if (!currentValue)
-                return false;
-
-            settings["recreate_database"] = false;
-            File.WriteAllText(settingsPath, settings.ToString(Formatting.Indented));
-            return true;
-        }
-
-        private static string? FindProjectSettingsPath(string runtimeConfigPath)
-        {
-            var currentDirectory = Path.GetDirectoryName(runtimeConfigPath);
-            while (!string.IsNullOrWhiteSpace(currentDirectory))
-            {
-                var csprojPath = Path.Combine(currentDirectory, "ProcesamientoDePublicaciones.csproj");
-                if (File.Exists(csprojPath))
-                {
-                    var settingsPath = Path.Combine(currentDirectory, "settings.json");
-                    return settingsPath;
-                }
-
-                currentDirectory = Path.GetDirectoryName(currentDirectory);
-            }
-
-            return null;
-        }
     }
 }
+
+
+

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using VideoProcessingSystemV2.Configuration;
-using VideoProcessingSystemV2.Repositories;
+using FluxAnswer.Configuration;
+using FluxAnswer.Repositories;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Manages periodic extraction cycles for all accounts.
@@ -171,3 +171,4 @@ namespace VideoProcessingSystemV2.Extraction
         }
     }
 }
+

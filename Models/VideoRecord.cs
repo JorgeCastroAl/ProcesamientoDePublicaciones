@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PocketBase.Framework.Attributes;
 
-namespace VideoProcessingSystemV2.Models
+namespace FluxAnswer.Models
 {
     /// <summary>
     /// Represents a TikTok video record in the processing pipeline.
@@ -38,6 +38,10 @@ namespace VideoProcessingSystemV2.Models
         [PocketBaseField(FieldType = "text", Required = true)]
         public string Author { get; set; } = string.Empty;
 
+        [JsonProperty("social_network_id")]
+        [PocketBaseField(FieldType = "relation", RelationCollection = "social_network", Required = false)]
+        public string? SocialNetworkId { get; set; }
+
         [JsonProperty("upload_date")]
         [PocketBaseField(FieldType = "date")]
         public DateTime UploadDate { get; set; }
@@ -47,9 +51,29 @@ namespace VideoProcessingSystemV2.Models
         [PocketBaseField(FieldType = "text", Required = true)]
         public string Status { get; set; } = "pending";
 
+        [JsonProperty("priority")]
+        [PocketBaseField(FieldType = "bool")]
+        public bool Priority { get; set; } = false;
+
         [JsonProperty("transcription")]
         [PocketBaseField(FieldType = "editor")]
         public string? Transcription { get; set; }
+
+        [JsonProperty("response_text")]
+        [PocketBaseField(FieldType = "text")]
+        public string? ResponseText { get; set; }
+
+        [JsonProperty("api_status")]
+        [PocketBaseField(FieldType = "text")]
+        public string ApiStatus { get; set; } = "pending";
+
+        [JsonProperty("posted")]
+        [PocketBaseField(FieldType = "bool")]
+        public bool Posted { get; set; } = false;
+
+        [JsonProperty("posted_at")]
+        [PocketBaseField(FieldType = "date")]
+        public DateTime? PostedAt { get; set; }
 
         [JsonProperty("error_message")]
         [PocketBaseField(FieldType = "text")]
@@ -71,6 +95,14 @@ namespace VideoProcessingSystemV2.Models
         [JsonProperty("response_generated")]
         [PocketBaseField(FieldType = "bool")]
         public bool ResponseGenerated { get; set; } = false;
+
+        [JsonProperty("custom_comments_success")]
+        [PocketBaseField(FieldType = "bool")]
+        public bool CustomCommentsSuccess { get; set; } = false;
+
+        [JsonProperty("custom_comments_generated_count")]
+        [PocketBaseField(FieldType = "number")]
+        public int CustomCommentsGeneratedCount { get; set; } = 0;
 
         [JsonProperty("created")]
         public DateTime CreatedAt { get; set; }
@@ -115,3 +147,4 @@ namespace VideoProcessingSystemV2.Models
         }
     }
 }
+

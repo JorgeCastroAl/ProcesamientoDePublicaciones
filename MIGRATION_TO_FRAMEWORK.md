@@ -130,7 +130,7 @@ var pbOptions = configuration.GetSection("PocketBase").Get<PocketBaseOptions>();
 
 La capa legacy fue retirada:
 - `IPocketBaseClient` eliminado del proyecto
-- Servicios migrados a repositorios (`IVideoRepo`, `ICommentRepo`, `IResponseRepo`, `IAccountToFollowRepo`, `IBotAccountRepo`)
+- Servicios migrados a repositorios (`IVideoRepo`, `ICommentRepo`, `IAccountToFollowRepo`, `IBotAccountRepo`, `IBotAccountVideoRepo`)
 - DI actualizado para usar únicamente `PocketBase.Framework`
 
 ## Próximos Pasos

@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using PocketBase.Framework.Repository;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Repositories
+namespace FluxAnswer.Repositories
 {
     public interface IVideoRepo : IRepository<VideoRecord>
     {
@@ -12,5 +12,7 @@ namespace VideoProcessingSystemV2.Repositories
         Task<bool> ExistsByTikTokIdAsync(string tiktokVideoId);
         Task<List<VideoRecord>> GetByStatusAsync(string status);
         Task<List<VideoRecord>> GetIncompleteVideosAsync();
+        Task<VideoRecord?> GetNextIncompleteVideoAsync();
     }
 }
+

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace VideoProcessingSystemV2.Configuration
+namespace FluxAnswer.Configuration
 {
     /// <summary>
     /// Validates startup requirements before the service can run.
@@ -266,3 +266,4 @@ namespace VideoProcessingSystemV2.Configuration
         }
     }
 }
+

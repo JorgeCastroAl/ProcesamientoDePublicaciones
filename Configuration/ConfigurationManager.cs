@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using Newtonsoft.Json;
 using Serilog;
 
-namespace VideoProcessingSystemV2.Configuration
+namespace FluxAnswer.Configuration
 {
     /// <summary>
     /// Manages application configuration with JSON file loading and automatic reload.
@@ -20,14 +20,23 @@ namespace VideoProcessingSystemV2.Configuration
         private const int DefaultProcessingRetryCount = 3;
         private const int DefaultProcessingPollIntervalSeconds = 30;
         private const int DefaultCommentsExtractionLimit = 12;
+        private const int DefaultCustomCommentsPerBotAccount = 0;
         private const bool DefaultSkipTranscription = false;
         private const bool DefaultRecreateDatabase = false;
         private const bool DefaultSeedDataRestoreEnabled = false;
         private const string DefaultSeedDataDirectory = "SeedData";
+        private const string DefaultPocketBaseBindIp = "0.0.0.0";
+        private const int DefaultPocketBasePort = 8090;
 
         public event EventHandler? ConfigurationChanged;
 
         public string PocketBaseUrl => _settings.PocketBaseUrl ?? string.Empty;
+        public string PocketBaseBindIp => string.IsNullOrWhiteSpace(_settings.PocketBaseBindIp)
+            ? DefaultPocketBaseBindIp
+            : _settings.PocketBaseBindIp;
+        public int PocketBasePort => _settings.PocketBasePort is > 0 and <= 65535
+            ? _settings.PocketBasePort.Value
+            : DefaultPocketBasePort;
         public string PocketBaseAdminEmail => _settings.PocketBaseAdminEmail ?? string.Empty;
         public string PocketBaseAdminPassword => _settings.PocketBaseAdminPassword ?? string.Empty;
         public string AssemblyAIApiKey => _settings.AssemblyAIApiKey ?? string.Empty;
@@ -38,6 +47,7 @@ namespace VideoProcessingSystemV2.Configuration
         public int ProcessingPollIntervalSeconds => _settings.ProcessingPollIntervalSeconds ?? DefaultProcessingPollIntervalSeconds;
         public string TempDirectory => _settings.TempDirectory ?? string.Empty;
         public int CommentsExtractionLimit => _settings.CommentsExtractionLimit ?? DefaultCommentsExtractionLimit;
+        public int CustomCommentsPerBotAccount => _settings.CustomCommentsPerBotAccount ?? DefaultCustomCommentsPerBotAccount;
         public bool SkipTranscription => _settings.SkipTranscription ?? DefaultSkipTranscription;
         public bool RecreateDatabase => _settings.RecreateDatabase ?? DefaultRecreateDatabase;
         public bool SeedDataRestoreEnabled => _settings.SeedDataRestoreEnabled ?? DefaultSeedDataRestoreEnabled;
@@ -141,3 +151,4 @@ namespace VideoProcessingSystemV2.Configuration
         }
     }
 }
+

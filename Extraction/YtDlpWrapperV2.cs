@@ -1,16 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
-using VideoProcessingSystemV2.Models;
+using FluxAnswer.Models;
 
-namespace VideoProcessingSystemV2.Extraction
+namespace FluxAnswer.Extraction
 {
     /// <summary>
     /// Wrapper mejorado para yt-dlp con soporte completo de comentarios.
-    /// Incluye manejo de cookies, límites de comentarios y timeouts extendidos.
+    /// Incluye manejo de cookies, lÃ­mites de comentarios y timeouts extendidos.
     /// </summary>
     public class YtDlpWrapperV2 : IYtDlpWrapper
     {
@@ -190,7 +190,7 @@ namespace VideoProcessingSystemV2.Extraction
 
         /// <summary>
         /// Extracts comments from a specific video URL.
-        /// Incluye manejo de cookies y límites para evitar bloqueos.
+        /// Incluye manejo de cookies y lÃ­mites para evitar bloqueos.
         /// </summary>
         public async Task<List<CommentData>> ExtractCommentsAsync(string videoUrl)
         {
@@ -323,3 +323,4 @@ namespace VideoProcessingSystemV2.Extraction
         }
     }
 }
+
