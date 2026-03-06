@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
+    <Company>CYLON NET EIRL</Company>
+    <Authors>CYLON NET EIRL</Authors>
+    <Product>FluxAnswer</Product>
+    <Copyright>Copyright (c) CYLON NET EIRL</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,6 +35,9 @@
     <None Update="SeedData\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="branding\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

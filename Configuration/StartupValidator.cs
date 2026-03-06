@@ -96,6 +96,12 @@ namespace FluxAnswer.Configuration
                 valid = false;
             }
 
+            if (string.IsNullOrWhiteSpace(_config.ModifyCommentApiUrl))
+            {
+                Log.Error("Configuration Error: modify_comment_api_url is required but not set");
+                valid = false;
+            }
+
             if (string.IsNullOrWhiteSpace(_config.TempDirectory))
             {
                 Log.Error("Configuration Error: temp_directory is required but not set");

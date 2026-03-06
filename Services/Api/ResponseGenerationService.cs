@@ -27,11 +27,14 @@ namespace FluxAnswer.Services.Api
 
         public ResponseGenerationService(
             string apiUrl,
+            string? modifyCommentApiUrl,
             IBotAccountRepo botAccountRepo,
             IBotAccountVideoRepo botAccountVideoRepo)
         {
             _apiUrl = apiUrl;
-            _modifyCommentApiUrl = BuildModifyCommentApiUrl(apiUrl);
+            _modifyCommentApiUrl = string.IsNullOrWhiteSpace(modifyCommentApiUrl)
+                ? BuildModifyCommentApiUrl(apiUrl)
+                : modifyCommentApiUrl;
             _botAccountRepo = botAccountRepo;
             _botAccountVideoRepo = botAccountVideoRepo;
             _httpClient = new HttpClient

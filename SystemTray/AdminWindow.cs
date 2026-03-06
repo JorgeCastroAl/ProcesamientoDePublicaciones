@@ -14,6 +14,7 @@ namespace FluxAnswer.SystemTray
         private readonly IConfigurationManager _config;
         private readonly PocketBaseManager _pocketBaseManager;
         private readonly System.Windows.Forms.Timer _refreshTimer;
+        private readonly ToolTip _toolTip = new ToolTip();
         
         // Status labels
         private Label _lastExtractionLabel = null!;
@@ -36,6 +37,7 @@ namespace FluxAnswer.SystemTray
         private TextBox _tempDirectoryInput = null!;
         private TextBox _apiKeyInput = null!;
         private TextBox _responseApiUrlInput = null!;
+        private TextBox _modifyCommentApiUrlInput = null!;
 
         public AdminWindow(
             IVideoProcessingService service, 
@@ -58,37 +60,85 @@ namespace FluxAnswer.SystemTray
 
         private void InitializeComponents()
         {
-            Text = "Video Processing System V2 - Administration";
-            Size = new Size(560, 540);
+            Text = "FluxAnswer - Administration";
+            Size = new Size(585, 578);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
+            Icon = BrandingAssets.GetApplicationIcon();
 
             var mainPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 4,
-                Padding = new Padding(10)
+                RowCount = 5,
+                Padding = new Padding(10, 4, 10, 10)
             };
             mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            // Branding Header
+            mainPanel.Controls.Add(CreateBrandingHeader(), 0, 0);
 
             // Status Section
-            mainPanel.Controls.Add(CreateStatusSection(), 0, 0);
+            mainPanel.Controls.Add(CreateStatusSection(), 0, 1);
             
             // Service Control Section
-            mainPanel.Controls.Add(CreateServiceControlSection(), 0, 1);
+            mainPanel.Controls.Add(CreateServiceControlSection(), 0, 2);
             
             // Configuration Section
-            mainPanel.Controls.Add(CreateConfigurationSection(), 0, 2);
+            mainPanel.Controls.Add(CreateConfigurationSection(), 0, 3);
             
             // Data Management Section
-            mainPanel.Controls.Add(CreateDataManagementSection(), 0, 3);
+            mainPanel.Controls.Add(CreateDataManagementSection(), 0, 4);
 
             Controls.Add(mainPanel);
+        }
+
+        private Panel CreateBrandingHeader()
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 52,
+                Padding = new Padding(6, 0, 6, 4)
+            };
+
+            var logo = new PictureBox
+            {
+                Width = 44,
+                Height = 44,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Image = BrandingAssets.GetLogoImage(44, 44),
+                Left = 2,
+                Top = 3
+            };
+
+            var title = new Label
+            {
+                Text = "FluxAnswer",
+                AutoSize = true,
+                Font = new Font(Font, FontStyle.Bold),
+                Left = 54,
+                Top = 7
+            };
+
+            var owner = new Label
+            {
+                Text = "Owner: " + BrandingAssets.OwnerName,
+                AutoSize = true,
+                ForeColor = Color.DimGray,
+                Left = 54,
+                Top = 26
+            };
+
+            panel.Controls.Add(logo);
+            panel.Controls.Add(title);
+            panel.Controls.Add(owner);
+            return panel;
         }
 
         private GroupBox CreateStatusSection()
@@ -163,23 +213,24 @@ namespace FluxAnswer.SystemTray
                 AutoSize = true,
                 Dock = DockStyle.Top,
                 Padding = new Padding(10),
-                Height = 80
+                Height = 60
             };
 
             var panel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 2,
+                ColumnCount = 4,
+                RowCount = 1,
                 AutoSize = true,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.None
             };
-            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 85F));
+            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
+            panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
 
-            // Row 1: Video Processing Service
+            // Processing controls
             var serviceLabel = new Label
             {
                 Text = "Processing:",
@@ -196,9 +247,9 @@ namespace FluxAnswer.SystemTray
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };
-            _startServiceBtn = CreateButton("Start", OnStartService, Color.FromArgb(0, 120, 0));
-            _stopServiceBtn = CreateButton("Stop", OnStopService, Color.FromArgb(180, 0, 0));
-            _restartServiceBtn = CreateButton("Restart", OnRestartService, Color.FromArgb(200, 120, 0));
+            _startServiceBtn = CreateIconButton("▶", OnStartService, Color.FromArgb(0, 120, 0), "Start processing service");
+            _stopServiceBtn = CreateIconButton("■", OnStopService, Color.FromArgb(180, 0, 0), "Stop processing service");
+            _restartServiceBtn = CreateIconButton("↻", OnRestartService, Color.FromArgb(200, 120, 0), "Restart processing service");
             
             serviceFlow.Controls.Add(_startServiceBtn);
             serviceFlow.Controls.Add(_stopServiceBtn);
@@ -207,7 +258,7 @@ namespace FluxAnswer.SystemTray
             panel.Controls.Add(serviceLabel, 0, 0);
             panel.Controls.Add(serviceFlow, 1, 0);
 
-            // Row 2: Database (PocketBase)
+            // Database controls
             var pbLabel = new Label
             {
                 Text = "Database:",
@@ -224,19 +275,43 @@ namespace FluxAnswer.SystemTray
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };
-            _startPbBtn = CreateButton("Start", OnStartPocketBase, Color.FromArgb(0, 100, 0));
-            _stopPbBtn = CreateButton("Stop", OnStopPocketBase, Color.FromArgb(150, 0, 0));
-            _restartPbBtn = CreateButton("Restart", OnRestartPocketBase, Color.FromArgb(180, 100, 0));
+            _startPbBtn = CreateIconButton("▶", OnStartPocketBase, Color.FromArgb(0, 100, 0), "Start database");
+            _stopPbBtn = CreateIconButton("■", OnStopPocketBase, Color.FromArgb(150, 0, 0), "Stop database");
+            _restartPbBtn = CreateIconButton("↻", OnRestartPocketBase, Color.FromArgb(180, 100, 0), "Restart database");
             
             pbFlow.Controls.Add(_startPbBtn);
             pbFlow.Controls.Add(_stopPbBtn);
             pbFlow.Controls.Add(_restartPbBtn);
             
-            panel.Controls.Add(pbLabel, 0, 1);
-            panel.Controls.Add(pbFlow, 1, 1);
+            panel.Controls.Add(pbLabel, 2, 0);
+            panel.Controls.Add(pbFlow, 3, 0);
 
             group.Controls.Add(panel);
             return group;
+        }
+
+        private Button CreateIconButton(string icon, EventHandler onClick, Color iconColor, string tooltip)
+        {
+            var btn = new Button
+            {
+                Text = icon,
+                Width = 32,
+                Height = 28,
+                Margin = new Padding(2),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Transparent,
+                ForeColor = iconColor,
+                Font = new Font("Segoe UI Symbol", 11F, FontStyle.Bold),
+                TabStop = true,
+                UseVisualStyleBackColor = false
+            };
+
+            btn.FlatAppearance.BorderSize = 0;
+            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(20, 0, 0, 0);
+            btn.FlatAppearance.MouseDownBackColor = Color.FromArgb(35, 0, 0, 0);
+            _toolTip.SetToolTip(btn, tooltip);
+            btn.Click += onClick;
+            return btn;
         }
 
         private GroupBox CreateConfigurationSection()
@@ -247,14 +322,14 @@ namespace FluxAnswer.SystemTray
                 AutoSize = true,
                 Dock = DockStyle.Top,
                 Padding = new Padding(10),
-                Height = 150
+                Height = 180
             };
 
             var panel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 4,
-                RowCount = 4,
+                RowCount = 5,
                 AutoSize = true
             };
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
@@ -324,6 +399,16 @@ namespace FluxAnswer.SystemTray
             };
             panel.Controls.Add(_responseApiUrlInput, 1, 3);
             panel.SetColumnSpan(_responseApiUrlInput, 3);
+
+            // Row 4: Modify Comment URL
+            AddConfigLabel(panel, 4, 0, "Modify URL:");
+            _modifyCommentApiUrlInput = new TextBox
+            {
+                Width = 380,
+                Anchor = AnchorStyles.Left
+            };
+            panel.Controls.Add(_modifyCommentApiUrlInput, 1, 4);
+            panel.SetColumnSpan(_modifyCommentApiUrlInput, 3);
 
             group.Controls.Add(panel);
             return group;
@@ -421,6 +506,7 @@ namespace FluxAnswer.SystemTray
             _tempDirectoryInput.Text = _config.TempDirectory;
             _apiKeyInput.Text = _config.AssemblyAIApiKey;
             _responseApiUrlInput.Text = _config.ResponseApiUrl;
+            _modifyCommentApiUrlInput.Text = _config.ModifyCommentApiUrl;
         }
 
         private async void OnRefreshTick(object? sender, EventArgs e)
@@ -465,22 +551,16 @@ namespace FluxAnswer.SystemTray
             if (isRunning)
             {
                 // Service is running - disable Start, enable Stop and Restart
-                _startServiceBtn.Enabled = false;
-                _startServiceBtn.BackColor = Color.FromArgb(100, 100, 100);
-                _stopServiceBtn.Enabled = true;
-                _stopServiceBtn.BackColor = Color.FromArgb(180, 0, 0);
-                _restartServiceBtn.Enabled = true;
-                _restartServiceBtn.BackColor = Color.FromArgb(200, 120, 0);
+                SetIconButtonState(_startServiceBtn, false, Color.FromArgb(0, 120, 0));
+                SetIconButtonState(_stopServiceBtn, true, Color.FromArgb(180, 0, 0));
+                SetIconButtonState(_restartServiceBtn, true, Color.FromArgb(200, 120, 0));
             }
             else
             {
                 // Service is stopped - enable Start, disable Stop and Restart
-                _startServiceBtn.Enabled = true;
-                _startServiceBtn.BackColor = Color.FromArgb(0, 120, 0);
-                _stopServiceBtn.Enabled = false;
-                _stopServiceBtn.BackColor = Color.FromArgb(100, 100, 100);
-                _restartServiceBtn.Enabled = false;
-                _restartServiceBtn.BackColor = Color.FromArgb(100, 100, 100);
+                SetIconButtonState(_startServiceBtn, true, Color.FromArgb(0, 120, 0));
+                SetIconButtonState(_stopServiceBtn, false, Color.FromArgb(180, 0, 0));
+                SetIconButtonState(_restartServiceBtn, false, Color.FromArgb(200, 120, 0));
             }
         }
 
@@ -495,23 +575,24 @@ namespace FluxAnswer.SystemTray
             if (isRunning)
             {
                 // Database is running - disable Start, enable Stop and Restart
-                _startPbBtn.Enabled = false;
-                _startPbBtn.BackColor = Color.FromArgb(100, 100, 100);
-                _stopPbBtn.Enabled = true;
-                _stopPbBtn.BackColor = Color.FromArgb(150, 0, 0);
-                _restartPbBtn.Enabled = true;
-                _restartPbBtn.BackColor = Color.FromArgb(180, 100, 0);
+                SetIconButtonState(_startPbBtn, false, Color.FromArgb(0, 100, 0));
+                SetIconButtonState(_stopPbBtn, true, Color.FromArgb(150, 0, 0));
+                SetIconButtonState(_restartPbBtn, true, Color.FromArgb(180, 100, 0));
             }
             else
             {
                 // Database is stopped - enable Start, disable Stop and Restart
-                _startPbBtn.Enabled = true;
-                _startPbBtn.BackColor = Color.FromArgb(0, 100, 0);
-                _stopPbBtn.Enabled = false;
-                _stopPbBtn.BackColor = Color.FromArgb(100, 100, 100);
-                _restartPbBtn.Enabled = false;
-                _restartPbBtn.BackColor = Color.FromArgb(100, 100, 100);
+                SetIconButtonState(_startPbBtn, true, Color.FromArgb(0, 100, 0));
+                SetIconButtonState(_stopPbBtn, false, Color.FromArgb(150, 0, 0));
+                SetIconButtonState(_restartPbBtn, false, Color.FromArgb(180, 100, 0));
             }
+        }
+
+        private static void SetIconButtonState(Button button, bool enabled, Color activeColor)
+        {
+            button.Enabled = enabled;
+            button.ForeColor = enabled ? activeColor : Color.FromArgb(130, 130, 130);
+            button.BackColor = Color.Transparent;
         }
 
         private async Task<bool> IsPocketBaseRunningAsync()
@@ -618,41 +699,146 @@ namespace FluxAnswer.SystemTray
             }
         }
 
-        private void OnSaveConfiguration(object? sender, EventArgs e)
+        private async void OnSaveConfiguration(object? sender, EventArgs e)
         {
             try
             {
-                var configPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "TikTokManager",
-                    "settings.json"
-                );
+                var configPath = GetRuntimeSettingsPath();
+                var settings = new System.Collections.Generic.Dictionary<string, object>();
 
-                var json = System.IO.File.ReadAllText(configPath);
-                var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, object>>(json);
+                if (System.IO.File.Exists(configPath))
+                {
+                    var json = System.IO.File.ReadAllText(configPath);
+                    settings = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, object>>(json)
+                        ?? new System.Collections.Generic.Dictionary<string, object>();
+                }
                 
-                if (settings == null)
-                    settings = new System.Collections.Generic.Dictionary<string, object>();
+                var previousCommentsLimit = ReadIntSetting(settings, "comments_extraction_limit", _config.CommentsExtractionLimit);
+                var previousSkipTranscription = ReadBoolSetting(settings, "skip_transcription", _config.SkipTranscription);
+                var previousTempDirectory = ReadStringSetting(settings, "temp_directory", _config.TempDirectory);
+                var previousApiKey = ReadStringSetting(settings, "assemblyai_api_key", _config.AssemblyAIApiKey);
+                var previousResponseApiUrl = ReadStringSetting(settings, "response_api_url", _config.ResponseApiUrl);
+                var previousModifyCommentApiUrl = ReadStringSetting(settings, "modify_comment_api_url", _config.ModifyCommentApiUrl);
 
-                settings["comments_extraction_limit"] = (int)_commentsLimitInput.Value;
-                settings["skip_transcription"] = _skipTranscriptionCheckbox.Checked;
-                settings["temp_directory"] = _tempDirectoryInput.Text;
-                settings["assemblyai_api_key"] = _apiKeyInput.Text;
-                settings["response_api_url"] = _responseApiUrlInput.Text;
+                var newCommentsLimit = (int)_commentsLimitInput.Value;
+                var newSkipTranscription = _skipTranscriptionCheckbox.Checked;
+                var newTempDirectory = _tempDirectoryInput.Text;
+                var newApiKey = _apiKeyInput.Text;
+                var newResponseApiUrl = _responseApiUrlInput.Text;
+                var newModifyCommentApiUrl = _modifyCommentApiUrlInput.Text;
+
+                var hasConfigChanges =
+                    previousCommentsLimit != newCommentsLimit ||
+                    previousSkipTranscription != newSkipTranscription ||
+                    !string.Equals(previousTempDirectory, newTempDirectory, StringComparison.Ordinal) ||
+                    !string.Equals(previousApiKey, newApiKey, StringComparison.Ordinal) ||
+                    !string.Equals(previousResponseApiUrl, newResponseApiUrl, StringComparison.Ordinal) ||
+                    !string.Equals(previousModifyCommentApiUrl, newModifyCommentApiUrl, StringComparison.Ordinal);
+
+                settings["comments_extraction_limit"] = newCommentsLimit;
+                settings["skip_transcription"] = newSkipTranscription;
+                settings["temp_directory"] = newTempDirectory;
+                settings["assemblyai_api_key"] = newApiKey;
+                settings["response_api_url"] = newResponseApiUrl;
+                settings["modify_comment_api_url"] = newModifyCommentApiUrl;
 
                 var newJson = Newtonsoft.Json.JsonConvert.SerializeObject(settings, Newtonsoft.Json.Formatting.Indented);
                 System.IO.File.WriteAllText(configPath, newJson);
 
                 _config.Reload();
 
-                MessageBox.Show("Configuration saved successfully. Changes will take effect immediately.", 
-                    "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (hasConfigChanges)
+                {
+                    var isRunning = _service.State == ServiceState.Running;
+                    if (isRunning)
+                    {
+                        await _service.StopAsync();
+                        await Task.Delay(2000);
+                        await _service.StartAsync();
+
+                        MessageBox.Show(
+                            "Configuration saved and service restarted successfully.",
+                            "Success",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                        return;
+                    }
+
+                    MessageBox.Show(
+                        "Configuration saved successfully. Service is stopped, so no restart was needed.",
+                        "Success",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    return;
+                }
+
+                MessageBox.Show(
+                    "No configuration changes detected.",
+                    "Information",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to save configuration: {ex.Message}", "Error", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private static int ReadIntSetting(System.Collections.Generic.IDictionary<string, object> settings, string key, int fallback)
+        {
+            if (!settings.TryGetValue(key, out var value) || value == null)
+            {
+                return fallback;
+            }
+
+            if (value is Newtonsoft.Json.Linq.JToken token)
+            {
+                return token.Type == Newtonsoft.Json.Linq.JTokenType.Integer
+                    ? token.ToObject<int>()
+                    : fallback;
+            }
+
+            return int.TryParse(value.ToString(), out var parsed) ? parsed : fallback;
+        }
+
+        private static bool ReadBoolSetting(System.Collections.Generic.IDictionary<string, object> settings, string key, bool fallback)
+        {
+            if (!settings.TryGetValue(key, out var value) || value == null)
+            {
+                return fallback;
+            }
+
+            if (value is Newtonsoft.Json.Linq.JToken token)
+            {
+                return token.Type == Newtonsoft.Json.Linq.JTokenType.Boolean
+                    ? token.ToObject<bool>()
+                    : fallback;
+            }
+
+            return bool.TryParse(value.ToString(), out var parsed) ? parsed : fallback;
+        }
+
+        private static string ReadStringSetting(System.Collections.Generic.IDictionary<string, object> settings, string key, string fallback)
+        {
+            if (!settings.TryGetValue(key, out var value) || value == null)
+            {
+                return fallback;
+            }
+
+            if (value is Newtonsoft.Json.Linq.JToken token)
+            {
+                return token.Type == Newtonsoft.Json.Linq.JTokenType.String
+                    ? token.ToObject<string>() ?? fallback
+                    : token.ToString();
+            }
+
+            return value.ToString() ?? fallback;
+        }
+
+        private string GetRuntimeSettingsPath()
+        {
+            return _config.ConfigFilePath;
         }
 
         private void OnBrowseTempDirectory(object? sender, EventArgs e)

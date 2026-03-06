@@ -1,12 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Serilog;
-using FluxAnswer.Models;
 
 namespace FluxAnswer.Services.AI
 {
@@ -15,153 +11,55 @@ namespace FluxAnswer.Services.AI
     /// </summary>
     public class TranscriptionService : ITranscriptionService
     {
-        private readonly HttpClient _httpClient;
+        private readonly AssemblyAiRestClient _client;
         private readonly string _apiKey;
-        private const string BaseUrl = "https://api.assemblyai.com/v2";
-        private const int PollingIntervalSeconds = 5;
-        private const int MaxWaitMinutes = 5;
 
         public TranscriptionService(string apiKey)
         {
             _apiKey = apiKey;
-            _httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromMinutes(MaxWaitMinutes + 1)
-            };
-            _httpClient.DefaultRequestHeaders.Add("Authorization", _apiKey);
+            _client = new AssemblyAiRestClient(_apiKey);
         }
 
         public async Task<string> TranscribeAsync(string audioPath)
         {
             try
             {
-                Log.Information("Starting transcription for: {AudioPath}", audioPath);
+                var totalTimer = Stopwatch.StartNew();
+                var fileInfo = new FileInfo(audioPath);
+                Log.Information("[Transcription] Starting for file: {AudioPath} (Exists: {Exists}, SizeBytes: {Size})",
+                    audioPath,
+                    fileInfo.Exists,
+                    fileInfo.Exists ? fileInfo.Length : 0);
 
-                var uploadUrl = await UploadAudioAsync(audioPath);
-                Log.Information("Audio uploaded successfully");
+                if (string.IsNullOrWhiteSpace(_apiKey) ||
+                    string.Equals(_apiKey, "YOUR_ASSEMBLYAI_API_KEY_HERE", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidOperationException("AssemblyAI API key is not configured.");
+                }
 
-                var transcriptId = await SubmitTranscriptionAsync(uploadUrl);
-                Log.Information("Transcription submitted with ID: {TranscriptId}", transcriptId);
+                if (!fileInfo.Exists)
+                {
+                    throw new FileNotFoundException($"Audio file not found: {audioPath}");
+                }
 
-                var transcription = await PollForCompletionAsync(transcriptId);
-                Log.Information("Transcription completed successfully");
+                Log.Information("[Transcription] Sending local file to AssemblyAI REST client");
+                var transcript = await _client.TranscribeFileAsync(audioPath);
 
-                return transcription;
+                if (string.IsNullOrWhiteSpace(transcript))
+                {
+                    throw new InvalidOperationException("Transcription completed but returned empty text.");
+                }
+
+                totalTimer.Stop();
+                Log.Information("[Transcription] Completed successfully in {ElapsedMs} ms", totalTimer.ElapsedMilliseconds);
+
+                return transcript;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Transcription failed for: {AudioPath}", audioPath);
+                Log.Error(ex, "[Transcription] Failed for file: {AudioPath}", audioPath);
                 throw;
             }
         }
-
-        private async Task<string> UploadAudioAsync(string audioPath)
-        {
-            if (!File.Exists(audioPath))
-            {
-                throw new FileNotFoundException($"Audio file not found: {audioPath}");
-            }
-
-            var url = $"{BaseUrl}/upload";
-
-            using var fileStream = File.OpenRead(audioPath);
-            using var content = new StreamContent(fileStream);
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-            var response = await _httpClient.PostAsync(url, content);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var uploadResponse = JsonConvert.DeserializeObject<UploadResponse>(responseContent);
-
-            if (uploadResponse == null || string.IsNullOrEmpty(uploadResponse.UploadUrl))
-            {
-                throw new InvalidOperationException("Failed to get upload URL from AssemblyAI");
-            }
-
-            return uploadResponse.UploadUrl;
-        }
-
-        private async Task<string> SubmitTranscriptionAsync(string audioUrl)
-        {
-            var url = $"{BaseUrl}/transcript";
-
-            var requestBody = new
-            {
-                audio_url = audioUrl,
-                speech_models = new[] { "universal-2" }
-            };
-
-            var json = JsonConvert.SerializeObject(requestBody);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync(url, content);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Log.Error("AssemblyAI API error: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
-                response.EnsureSuccessStatusCode();
-            }
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            var result = JsonConvert.DeserializeObject<TranscriptionResult>(responseContent);
-
-            if (result == null || string.IsNullOrEmpty(result.Id))
-            {
-                throw new InvalidOperationException("Failed to submit transcription to AssemblyAI");
-            }
-
-            return result.Id;
-        }
-
-        private async Task<string> PollForCompletionAsync(string transcriptId)
-        {
-            var url = $"{BaseUrl}/transcript/{transcriptId}";
-            var startTime = DateTime.UtcNow;
-            var maxWaitTime = TimeSpan.FromMinutes(MaxWaitMinutes);
-
-            while (true)
-            {
-                if (DateTime.UtcNow - startTime > maxWaitTime)
-                {
-                    throw new TimeoutException($"Transcription timed out after {MaxWaitMinutes} minutes");
-                }
-
-                var response = await _httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var result = JsonConvert.DeserializeObject<TranscriptionResult>(responseContent);
-
-                if (result == null)
-                {
-                    throw new InvalidOperationException("Failed to deserialize transcription status");
-                }
-
-                if (result.IsCompleted)
-                {
-                    if (string.IsNullOrEmpty(result.Text))
-                    {
-                        throw new InvalidOperationException("Transcription completed but text is empty");
-                    }
-                    return result.Text;
-                }
-
-                if (result.IsError)
-                {
-                    throw new InvalidOperationException($"Transcription failed: {result.Error}");
-                }
-
-                Log.Debug("Transcription status: {Status}, waiting {Interval}s...", result.Status, PollingIntervalSeconds);
-                await Task.Delay(PollingIntervalSeconds * 1000);
-            }
-        }
-    }
-
-    internal class UploadResponse
-    {
-        [JsonProperty("upload_url")]
-        public string UploadUrl { get; set; } = string.Empty;
     }
 }

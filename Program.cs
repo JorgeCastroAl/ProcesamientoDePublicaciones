@@ -1,6 +1,8 @@
 ﻿using Serilog;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,8 +56,13 @@ namespace FluxAnswer
                 Log.Information("========== Video Processing System V2 Starting ==========");
 
                 // Load configuration first (needed for PocketBase bind settings and credentials)
-                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.json");
+                var configPath = ResolveConfigPath();
                 var configManager = new ConfigurationManager(configPath);
+
+                if (args.Any(arg => string.Equals(arg, "--test-transcription", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return await RunTranscriptionSdkTestAsync(configManager);
+                }
 
                 // Start PocketBase
                 Log.Information("Initializing PocketBase...");
@@ -231,6 +238,130 @@ namespace FluxAnswer
             }
         }
 
+        private static string ResolveConfigPath()
+        {
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var devConfigPath = Path.Combine(baseDirectory, "settings.json");
+
+            if (IsDevelopmentMode(baseDirectory))
+            {
+                Log.Information("Running in Development mode. Using configuration file: {ConfigPath}", devConfigPath);
+                return devConfigPath;
+            }
+
+            return EnsureLocalAppDataConfig(baseDirectory);
+        }
+
+        private static bool IsDevelopmentMode(string baseDirectory)
+        {
+            var environmentOverride = Environment.GetEnvironmentVariable("FLUXANSWER_ENVIRONMENT");
+
+            if (string.Equals(environmentOverride, "Development", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(environmentOverride, "Production", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (Debugger.IsAttached)
+            {
+                return true;
+            }
+
+            var binMarker = $"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}";
+            return baseDirectory.IndexOf(binMarker, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string EnsureLocalAppDataConfig(string baseDirectory)
+        {
+            var localConfigDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "TikTokManager");
+            Directory.CreateDirectory(localConfigDirectory);
+
+            var localConfigPath = Path.Combine(localConfigDirectory, "settings.json");
+            if (!File.Exists(localConfigPath))
+            {
+                var sourceConfigPath = Path.Combine(baseDirectory, "settings.json");
+                if (File.Exists(sourceConfigPath))
+                {
+                    File.Copy(sourceConfigPath, localConfigPath, overwrite: false);
+                }
+                else
+                {
+                    var examplePath = Path.Combine(baseDirectory, "settings.example.json");
+                    if (File.Exists(examplePath))
+                    {
+                        File.Copy(examplePath, localConfigPath, overwrite: false);
+                    }
+                }
+            }
+
+            Log.Information("Running in Production mode. Using per-user configuration file: {ConfigPath}", localConfigPath);
+            return localConfigPath;
+        }
+
+        private static async Task<int> RunTranscriptionSdkTestAsync(IConfigurationManager config)
+        {
+            Log.Information("========== Running Transcription SDK Test ==========");
+            Console.WriteLine("[TEST] Running transcription integration test with official AssemblyAI SDK...");
+            Console.WriteLine($"[TEST] Config path: {config.ConfigFilePath}");
+
+            if (string.IsNullOrWhiteSpace(config.AssemblyAIApiKey) ||
+                string.Equals(config.AssemblyAIApiKey, "YOUR_ASSEMBLYAI_API_KEY_HERE", StringComparison.OrdinalIgnoreCase))
+            {
+                const string message = "AssemblyAI API key is not configured in active settings.json.";
+                Log.Error("[TEST] {Message}", message);
+                Console.WriteLine("[TEST][FAIL] " + message);
+                return 1;
+            }
+
+            if (string.IsNullOrWhiteSpace(config.TempDirectory) || !Directory.Exists(config.TempDirectory))
+            {
+                var message = $"Temp directory not found: {config.TempDirectory}";
+                Log.Error("[TEST] {Message}", message);
+                Console.WriteLine("[TEST][FAIL] " + message);
+                return 1;
+            }
+
+            var testMp3Path = Directory
+                .GetFiles(config.TempDirectory, "*.mp3", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(testMp3Path))
+            {
+                var message = $"No MP3 files found in temp directory: {config.TempDirectory}";
+                Log.Error("[TEST] {Message}", message);
+                Console.WriteLine("[TEST][FAIL] " + message);
+                return 1;
+            }
+
+            Console.WriteLine($"[TEST] Using MP3: {testMp3Path}");
+            Log.Information("[TEST] Using MP3: {Mp3Path}", testMp3Path);
+
+            try
+            {
+                var transcriptionService = new TranscriptionService(config.AssemblyAIApiKey);
+                var transcript = await transcriptionService.TranscribeAsync(testMp3Path);
+
+                var preview = transcript.Length > 220 ? transcript.Substring(0, 220) + "..." : transcript;
+                Console.WriteLine($"[TEST][OK] Transcript length: {transcript.Length}");
+                Console.WriteLine($"[TEST][OK] Transcript preview: {preview}");
+                Log.Information("[TEST] Transcription successful. Length={Length}", transcript.Length);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TEST][FAIL] {ex.Message}");
+                Log.Error(ex, "[TEST] Transcription SDK test failed");
+                return 1;
+            }
+        }
+
         private static void ConfigureServices(IServiceCollection services, ConfigurationManager configManager, PocketBaseOptions pbOptions)
         {
             // Configuration
@@ -285,7 +416,11 @@ namespace FluxAnswer
                 var config = sp.GetRequiredService<IConfigurationManager>();
                 var botAccountRepo = sp.GetRequiredService<IBotAccountRepo>();
                 var botAccountVideoRepo = sp.GetRequiredService<IBotAccountVideoRepo>();
-                return new ResponseGenerationService(config.ResponseApiUrl, botAccountRepo, botAccountVideoRepo);
+                return new ResponseGenerationService(
+                    config.ResponseApiUrl,
+                    config.ModifyCommentApiUrl,
+                    botAccountRepo,
+                    botAccountVideoRepo);
             });
             services.AddSingleton<IVideoResponseStageService>(sp =>
             {

@@ -28,6 +28,9 @@ namespace FluxAnswer.Configuration
         [JsonProperty("response_api_url")]
         public string? ResponseApiUrl { get; set; }
 
+        [JsonProperty("modify_comment_api_url")]
+        public string? ModifyCommentApiUrl { get; set; }
+
         [JsonProperty("ffmpeg_path")]
         public string? FFmpegPath { get; set; }
 

@@ -32,7 +32,11 @@ ProcesamientoDePublicaciones/
 
 ## Configuración
 
-Copia `Configuration/settings.template.json` a `C:\Users\jorge\AppData\Roaming\TikTokManager\settings.json` y actualízalo con tus valores.
+Copia `settings.example.json` como `settings.json` en la misma carpeta donde se ejecuta `FluxAnswer.exe` y actualízalo con tus valores.
+Si esa carpeta no tiene permisos de escritura (por ejemplo en `Program Files`), la app usa `%LocalAppData%\TikTokManager\settings.json` automáticamente.
+Comportamiento de ruta de configuración:
+- Desarrollo: usa `<carpeta_del_ejecutable>\settings.json`
+- Producción (instalada): usa `%LocalAppData%\TikTokManager\settings.json`
 
 ## Dependencias Externas
 
@@ -54,6 +58,66 @@ Los logs se almacenan en: `C:\Users\jorge\AppData\Local\TikTokManager\logs\`
 ```bash
 dotnet build
 ```
+
+## Instalacion automatica (Windows)
+
+Se incluye un instalador en PowerShell para preparar prerequisitos y dependencias:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-fluxanswer.ps1
+```
+
+Tambien tienes una version visual (GUI):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-fluxanswer-visual.ps1
+```
+
+O doble clic en:
+
+`install-fluxanswer-visual.cmd`
+
+Si necesitas distribuirlo como `.exe`, genera el instalador ejecutable con:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build-installer-exe.ps1 -ForceRebuild
+```
+
+Salida esperada:
+
+- `FluxAnswer\dist\FluxAnswerInstaller.exe`
+
+El instalador configura:
+
+- .NET SDK 10
+- yt-dlp
+- ffmpeg (requerido para conversion a MP3)
+- PocketBase
+- `settings.json` (si no existe, lo crea desde `settings.example.json`)
+- `dotnet restore` y `dotnet build`
+- Acceso directo en escritorio `FluxAnswer.lnk` con icono descargado
+
+Nota: despues de instalar herramientas puede ser necesario abrir una nueva terminal para refrescar PATH.
+
+## Desinstalacion
+
+Modo CLI:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\uninstall-fluxanswer.ps1
+```
+
+Desinstalacion completa (incluye datos locales, logs, sesiones y `settings.json`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\uninstall-fluxanswer.ps1 -RemoveAllData
+```
+
+Modo visual:
+
+- Abre `install-fluxanswer-visual.ps1` o `install-fluxanswer-visual.cmd`
+- Usa el boton `Desinstalar`
+- Marca `Desinstalacion completa` si deseas borrado total local
 
 ## Ejecución
 

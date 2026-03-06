@@ -9,6 +9,7 @@ namespace FluxAnswer.SystemTray
     public class SystemTrayIcon : IDisposable
     {
         private readonly NotifyIcon _notifyIcon;
+        private readonly Icon _appIcon;
         private readonly IVideoProcessingService _service;
         private readonly IConfigurationManager _config;
         private readonly PocketBaseManager _pocketBaseManager;
@@ -23,12 +24,14 @@ namespace FluxAnswer.SystemTray
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _pocketBaseManager = pocketBaseManager ?? throw new ArgumentNullException(nameof(pocketBaseManager));
+            _appIcon = BrandingAssets.GetApplicationIcon();
             
             _contextMenu = CreateContextMenu();
             _notifyIcon = new NotifyIcon
             {
                 ContextMenuStrip = _contextMenu,
-                Text = "Video Processing System V2",
+                Text = "FluxAnswer",
+                Icon = _appIcon,
                 Visible = true
             };
 
@@ -56,17 +59,8 @@ namespace FluxAnswer.SystemTray
         private void UpdateIcon()
         {
             var state = _service.State;
-            var color = state switch
-            {
-                ServiceState.Running => Color.Green,
-                ServiceState.Stopped => Color.Red,
-                ServiceState.Error => Color.Yellow,
-                ServiceState.Starting => Color.Yellow,
-                ServiceState.Stopping => Color.Yellow,
-                _ => Color.Gray
-            };
-
-            _notifyIcon.Icon = CreateIcon(color);
+            _notifyIcon.Icon = _appIcon;
+            _notifyIcon.Text = BuildTrayText(state);
             
             // Update menu item states
             if (_contextMenu.Items.Count >= 4)
@@ -76,18 +70,10 @@ namespace FluxAnswer.SystemTray
             }
         }
 
-        private Icon CreateIcon(Color color)
+        private static string BuildTrayText(ServiceState state)
         {
-            var bitmap = new Bitmap(16, 16);
-            using (var g = Graphics.FromImage(bitmap))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                using (var brush = new SolidBrush(color))
-                {
-                    g.FillEllipse(brush, 2, 2, 12, 12);
-                }
-            }
-            return Icon.FromHandle(bitmap.GetHicon());
+            var text = $"FluxAnswer - {state} - {BrandingAssets.OwnerName}";
+            return text.Length <= 63 ? text : text.Substring(0, 63);
         }
 
         private void OnServiceStateChanged(object? sender, ServiceStateChangedEventArgs e)
@@ -197,6 +183,7 @@ namespace FluxAnswer.SystemTray
             _adminWindow?.Dispose();
             _contextMenu?.Dispose();
             _notifyIcon?.Dispose();
+            _appIcon?.Dispose();
         }
     }
 }

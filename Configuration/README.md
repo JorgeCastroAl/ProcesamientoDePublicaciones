@@ -3,7 +3,15 @@
 Toda la configuración de la aplicación se maneja a través de un único archivo JSON ubicado en:
 
 ```
-%AppData%\TikTokManager\settings.json
+<carpeta_del_ejecutable>\settings.json
+```
+
+Ubicación efectiva por entorno:
+- Desarrollo: `<carpeta_del_ejecutable>\settings.json`
+- Producción (instalada):
+
+```
+%LocalAppData%\TikTokManager\settings.json
 ```
 
 ## Archivo de Plantilla
@@ -19,6 +27,7 @@ Usa `settings.example.json` en la raíz del proyecto como plantilla para crear t
   "pocketbase_admin_password": "PocketKarlos555",
   "assemblyai_api_key": "YOUR_ASSEMBLYAI_API_KEY_HERE",
   "response_api_url": "http://localhost:9090/api/opinion/generate-comment",
+  "modify_comment_api_url": "http://localhost:9090/api/opinion/modify-comment",
   "ffmpeg_path": "ffmpeg.exe",
   "extraction_interval_minutes": 60,
   "processing_retry_count": 3,
@@ -39,6 +48,7 @@ Usa `settings.example.json` en la raíz del proyecto como plantilla para crear t
 ### APIs Externas
 - **assemblyai_api_key**: API key para el servicio de transcripción AssemblyAI
 - **response_api_url**: URL del servicio de generación de respuestas/opiniones (default: `http://localhost:9090/api/opinion/generate-comment`)
+- **modify_comment_api_url**: URL del servicio de modificación/pulido de comentarios (default: `http://localhost:9090/api/opinion/modify-comment`)
 
 ### Herramientas
 - **ffmpeg_path**: Ruta al ejecutable de FFmpeg (default: `ffmpeg.exe`)

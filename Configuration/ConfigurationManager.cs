@@ -29,6 +29,7 @@ namespace FluxAnswer.Configuration
         private const int DefaultPocketBasePort = 8090;
 
         public event EventHandler? ConfigurationChanged;
+        public string ConfigFilePath => _configFilePath;
 
         public string PocketBaseUrl => _settings.PocketBaseUrl ?? string.Empty;
         public string PocketBaseBindIp => string.IsNullOrWhiteSpace(_settings.PocketBaseBindIp)
@@ -41,6 +42,9 @@ namespace FluxAnswer.Configuration
         public string PocketBaseAdminPassword => _settings.PocketBaseAdminPassword ?? string.Empty;
         public string AssemblyAIApiKey => _settings.AssemblyAIApiKey ?? string.Empty;
         public string ResponseApiUrl => _settings.ResponseApiUrl ?? string.Empty;
+        public string ModifyCommentApiUrl => string.IsNullOrWhiteSpace(_settings.ModifyCommentApiUrl)
+            ? BuildModifyCommentApiUrl(_settings.ResponseApiUrl)
+            : _settings.ModifyCommentApiUrl;
         public string FFmpegPath => _settings.FFmpegPath ?? "ffmpeg.exe";
         public int ExtractionIntervalMinutes => _settings.ExtractionIntervalMinutes ?? DefaultExtractionIntervalMinutes;
         public int ProcessingRetryCount => _settings.ProcessingRetryCount ?? DefaultProcessingRetryCount;
@@ -148,6 +152,29 @@ namespace FluxAnswer.Configuration
         public void Dispose()
         {
             _fileWatcher?.Dispose();
+        }
+
+        private static string BuildModifyCommentApiUrl(string? generateCommentApiUrl)
+        {
+            if (string.IsNullOrWhiteSpace(generateCommentApiUrl))
+            {
+                return string.Empty;
+            }
+
+            const string generatePath = "/api/opinion/generate-comment";
+            const string modifyPath = "/api/opinion/modify-comment";
+
+            if (generateCommentApiUrl.EndsWith(generatePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return generateCommentApiUrl.Substring(0, generateCommentApiUrl.Length - generatePath.Length) + modifyPath;
+            }
+
+            if (generateCommentApiUrl.EndsWith("/", StringComparison.Ordinal))
+            {
+                return generateCommentApiUrl.TrimEnd('/') + modifyPath;
+            }
+
+            return generateCommentApiUrl + modifyPath;
         }
     }
 }
