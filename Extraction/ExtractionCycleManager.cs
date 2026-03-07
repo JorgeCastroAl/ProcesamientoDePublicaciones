@@ -116,6 +116,19 @@ namespace FluxAnswer.Extraction
 
                     try
                     {
+                        if (string.IsNullOrWhiteSpace(account.Username) || string.IsNullOrWhiteSpace(account.ProfileUrl))
+                        {
+                            Log.Warning(
+                                "Skipping invalid account record. Id={AccountId}, Username='{Username}', ProfileUrl='{ProfileUrl}'",
+                                account.Id,
+                                account.Username,
+                                account.ProfileUrl
+                            );
+
+                            eventArgs.AccountsProcessed++;
+                            continue;
+                        }
+
                         Log.Information("Processing account: {Username}", account.Username);
                         var result = await _extractionService.ExtractVideosAsync(account);
 

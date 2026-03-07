@@ -38,6 +38,14 @@ namespace FluxAnswer.Services
 
             var healthCheckHost = IsAnyAddress(_bindIp) ? "127.0.0.1" : _bindIp;
             _healthCheckUrl = $"http://{healthCheckHost}:{_port}/";
+
+            Log.Information(
+                "[POCKETBASE] Manager initialized. Path={Path}, DataDir={DataDir}, BindIp={BindIp}, Port={Port}, HealthUrl={HealthUrl}",
+                _pocketBasePath,
+                _dataDirectory,
+                _bindIp,
+                _port,
+                _healthCheckUrl);
         }
 
         /// <summary>
@@ -101,6 +109,7 @@ namespace FluxAnswer.Services
                 };
 
                 _pocketBaseProcess.Start();
+                Log.Debug("[POCKETBASE] Process started. PID={Pid}", _pocketBaseProcess.Id);
                 _pocketBaseProcess.BeginOutputReadLine();
                 _pocketBaseProcess.BeginErrorReadLine();
                 _isManaged = true;
@@ -137,19 +146,34 @@ namespace FluxAnswer.Services
         /// </summary>
         public void Stop()
         {
-            if (_pocketBaseProcess != null && !_pocketBaseProcess.HasExited && _isManaged)
+            if (_pocketBaseProcess == null || !_isManaged)
             {
-                try
+                return;
+            }
+
+            try
+            {
+                if (_pocketBaseProcess.HasExited)
                 {
-                    Log.Information("Stopping PocketBase...");
-                    _pocketBaseProcess.Kill(true);
-                    _pocketBaseProcess.WaitForExit(5000);
-                    Log.Information("PocketBase stopped");
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error stopping PocketBase");
-                }
+
+                Log.Information("Stopping PocketBase...");
+                _pocketBaseProcess.Kill(true);
+                _pocketBaseProcess.WaitForExit(5000);
+                Log.Information("PocketBase stopped");
+            }
+            catch (InvalidOperationException)
+            {
+                // Process already exited or no longer associated.
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error stopping PocketBase");
+            }
+            finally
+            {
+                _isManaged = false;
             }
         }
 
@@ -177,19 +201,28 @@ namespace FluxAnswer.Services
         /// </summary>
         private string FindPocketBaseExecutable()
         {
-            // Check common locations
+            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            var currentDirectory = Environment.CurrentDirectory;
+            var localAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var programFilesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+
+            // Probe installer layout first, then development/runtime fallback locations.
             var possiblePaths = new[]
             {
-                Path.Combine(Environment.CurrentDirectory, "pocketbase.exe"),
-                Path.Combine(Environment.CurrentDirectory, "pocketbase", "pocketbase.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "pocketbase.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "pocketbase", "pocketbase.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "pocketbase.exe"),
-                "pocketbase.exe" // Try PATH
+                Path.GetFullPath(Path.Combine(baseDirectory, "..", "..", "Tools", "PocketBase", "pocketbase.exe")),
+                Path.GetFullPath(Path.Combine(currentDirectory, "..", "..", "Tools", "PocketBase", "pocketbase.exe")),
+                Path.Combine(programFilesPath, "TikTokSuite", "Tools", "PocketBase", "pocketbase.exe"),
+                Path.Combine(baseDirectory, "pocketbase.exe"),
+                Path.Combine(baseDirectory, "pocketbase", "pocketbase.exe"),
+                Path.Combine(currentDirectory, "pocketbase.exe"),
+                Path.Combine(currentDirectory, "pocketbase", "pocketbase.exe"),
+                Path.Combine(localAppDataPath, "TikTokManager", "pocketbase.exe"),
+                "pocketbase.exe" // Last fallback: PATH
             };
 
             foreach (var path in possiblePaths)
             {
+                Log.Debug("[POCKETBASE] Probing executable path: {Path}", path);
                 if (File.Exists(path))
                 {
                     Log.Information("Found PocketBase at: {Path}", path);
@@ -197,9 +230,9 @@ namespace FluxAnswer.Services
                 }
             }
 
-            // Default to current directory
-            Log.Warning("PocketBase executable not found in common locations, using default path");
-            return Path.Combine(Environment.CurrentDirectory, "pocketbase.exe");
+            var fallbackPath = Path.GetFullPath(Path.Combine(baseDirectory, "..", "..", "Tools", "PocketBase", "pocketbase.exe"));
+            Log.Warning("PocketBase executable not found in known locations, using fallback path: {Path}", fallbackPath);
+            return fallbackPath;
         }
 
         private static bool IsAnyAddress(string ip)

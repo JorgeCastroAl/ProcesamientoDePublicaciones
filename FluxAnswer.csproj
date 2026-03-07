@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PocketBase.Framework\PocketBase.Framework.csproj" />
+    <ProjectReference Include="..\TikTokSuite.Licensing\TikTokSuite.Licensing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -51,6 +51,8 @@ namespace FluxAnswer.Extraction
             // Check common locations
             var possiblePaths = new[]
             {
+                System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TikTokSuite", "Tools", "YtDlp", "yt-dlp.exe"),
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Tools", "YtDlp", "yt-dlp.exe")),
                 System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "yt-dlp.exe"),
                 System.IO.Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"),
                 System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "yt-dlp.exe"),

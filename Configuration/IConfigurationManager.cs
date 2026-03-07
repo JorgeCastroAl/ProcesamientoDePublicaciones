@@ -11,6 +11,7 @@ namespace FluxAnswer.Configuration
         string PocketBaseUrl { get; }
         string PocketBaseBindIp { get; }
         int PocketBasePort { get; }
+        string PocketBasePath { get; }
         string PocketBaseAdminEmail { get; }
         string PocketBaseAdminPassword { get; }
         string AssemblyAIApiKey { get; }
@@ -29,6 +30,7 @@ namespace FluxAnswer.Configuration
         string SeedDataDirectory { get; }
 
         void Reload();
+        void DisableOneTimeDatabaseRestoreFlags();
         event EventHandler ConfigurationChanged;
     }
 }

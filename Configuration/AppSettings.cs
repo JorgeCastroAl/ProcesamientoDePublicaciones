@@ -16,6 +16,9 @@ namespace FluxAnswer.Configuration
         [JsonProperty("pocketbase_port")]
         public int? PocketBasePort { get; set; }
 
+        [JsonProperty("pocketbase_path")]
+        public string? PocketBasePath { get; set; }
+
         [JsonProperty("pocketbase_admin_email")]
         public string? PocketBaseAdminEmail { get; set; }
 

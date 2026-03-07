@@ -38,6 +38,7 @@ namespace FluxAnswer.Configuration
         public int PocketBasePort => _settings.PocketBasePort is > 0 and <= 65535
             ? _settings.PocketBasePort.Value
             : DefaultPocketBasePort;
+        public string PocketBasePath => _settings.PocketBasePath ?? string.Empty;
         public string PocketBaseAdminEmail => _settings.PocketBaseAdminEmail ?? string.Empty;
         public string PocketBaseAdminPassword => _settings.PocketBaseAdminPassword ?? string.Empty;
         public string AssemblyAIApiKey => _settings.AssemblyAIApiKey ?? string.Empty;
@@ -111,6 +112,7 @@ namespace FluxAnswer.Configuration
                     }
 
                     _settings = settings;
+
                     Log.Information("Configuration loaded successfully from: {ConfigFile}", _configFilePath);
                 }
                 catch (Exception ex)
@@ -125,6 +127,27 @@ namespace FluxAnswer.Configuration
         {
             Log.Information("Reloading configuration...");
             Load();
+            OnConfigurationChanged();
+        }
+
+        public void DisableOneTimeDatabaseRestoreFlags()
+        {
+            lock (_lock)
+            {
+                if ((_settings.RecreateDatabase ?? false) == false && (_settings.SeedDataRestoreEnabled ?? false) == false)
+                {
+                    return;
+                }
+
+                _settings.RecreateDatabase = false;
+                _settings.SeedDataRestoreEnabled = false;
+
+                var json = JsonConvert.SerializeObject(_settings, Formatting.Indented);
+                File.WriteAllText(_configFilePath, json);
+
+                Log.Information("Configuration updated: recreate_database=false and seed_data_restore_enabled=false after successful restore.");
+            }
+
             OnConfigurationChanged();
         }
 

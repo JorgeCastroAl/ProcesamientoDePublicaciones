@@ -26,6 +26,8 @@ namespace FluxAnswer.Extraction
 
         public async Task<ExtractionResult> ExtractVideosAsync(AccountToFollow account)
         {
+            NormalizeAccount(account);
+
             var result = new ExtractionResult
             {
                 AccountUsername = account.Username
@@ -33,6 +35,14 @@ namespace FluxAnswer.Extraction
 
             try
             {
+                if (string.IsNullOrWhiteSpace(account.Username) || string.IsNullOrWhiteSpace(account.ProfileUrl))
+                {
+                    var message = $"Invalid account data (Id={account.Id ?? "n/a"}): Username/ProfileUrl required";
+                    Log.Warning(message);
+                    result.Errors.Add(message);
+                    return result;
+                }
+
                 Log.Information("Starting video extraction for account: {Username}", account.Username);
 
                 // Determine extraction count (10 for first time, 3 for subsequent)
@@ -117,6 +127,11 @@ namespace FluxAnswer.Extraction
         /// </summary>
         private async Task<int> DetermineExtractionCountAsync(string accountUsername)
         {
+            if (string.IsNullOrWhiteSpace(accountUsername))
+            {
+                return 10;
+            }
+
             try
             {
                 var existingVideos = await _videoRepo.GetByAccountUsernameAsync(accountUsername);
@@ -148,6 +163,34 @@ namespace FluxAnswer.Extraction
             {
                 Log.Warning(ex, "Failed to resolve social network id for 'tiktok'");
                 return null;
+            }
+        }
+
+        private static void NormalizeAccount(AccountToFollow account)
+        {
+            account.Username = account.Username?.Trim() ?? string.Empty;
+            account.ProfileUrl = account.ProfileUrl?.Trim() ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(account.Username) && string.IsNullOrWhiteSpace(account.ProfileUrl))
+            {
+                var cleanUsername = account.Username.TrimStart('@');
+                if (!string.IsNullOrWhiteSpace(cleanUsername))
+                {
+                    account.ProfileUrl = $"https://www.tiktok.com/@{cleanUsername}";
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(account.Username) && !string.IsNullOrWhiteSpace(account.ProfileUrl))
+            {
+                var marker = "/@";
+                var markerIndex = account.ProfileUrl.IndexOf(marker, StringComparison.Ordinal);
+                if (markerIndex >= 0)
+                {
+                    var start = markerIndex + marker.Length;
+                    var tail = account.ProfileUrl[start..];
+                    var endIndex = tail.IndexOfAny(new[] { '/', '?', '&' });
+                    account.Username = (endIndex >= 0 ? tail[..endIndex] : tail).Trim();
+                }
             }
         }
     }

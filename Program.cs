@@ -22,6 +22,7 @@ using FluxAnswer.Services.Scraping.TikTok;
 using FluxAnswer.Services.Database;
 using FluxAnswer.Services.Pipeline;
 using FluxAnswer.SystemTray;
+using FluxAnswer.Security;
 
 namespace FluxAnswer
 {
@@ -30,6 +31,8 @@ namespace FluxAnswer
         [STAThread]
         static async Task<int> Main(string[] args)
         {
+            var startupStopwatch = Stopwatch.StartNew();
+
             // Configure Serilog
             var logDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -40,7 +43,7 @@ namespace FluxAnswer
             Directory.CreateDirectory(logDirectory);
 
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
+                .MinimumLevel.Debug()
                 .WriteTo.File(
                     path: Path.Combine(logDirectory, "video-processing-.log"),
                     rollingInterval: RollingInterval.Day,
@@ -54,29 +57,82 @@ namespace FluxAnswer
             try
             {
                 Log.Information("========== Video Processing System V2 Starting ==========");
+                Log.Information("[STARTUP][ETAPA 0] Inicializacion de logging completada. LogDir={LogDirectory}", logDirectory);
+
+                void LogStage(string stage, string detail)
+                {
+                    Log.Information("[STARTUP][{Stage}] +{ElapsedMs}ms {Detail}", stage, startupStopwatch.ElapsedMilliseconds, detail);
+                }
 
                 // Load configuration first (needed for PocketBase bind settings and credentials)
+                LogStage("ETAPA 1", "Resolviendo ruta de configuracion");
                 var configPath = ResolveConfigPath();
+                LogStage("ETAPA 1", $"Configuracion activa: {configPath}");
                 var configManager = new ConfigurationManager(configPath);
+                LogStage("ETAPA 1", "ConfigurationManager inicializado");
+                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                Log.Debug("[STARTUP][ETAPA 1] BaseDirectory={BaseDirectory}", baseDirectory);
+
+                LogStage("ETAPA 2", "Iniciando validacion de licencia");
+                var licenseValidation = LicenseValidator.ValidateForCurrentMachine(
+                    baseDirectory,
+                    IsDevelopmentMode(baseDirectory));
+
+                if (!licenseValidation.IsValid)
+                {
+                    LogStage("ETAPA 2", "Validacion de licencia fallo");
+                    Log.Error("License validation failed: {Reason}", licenseValidation.Reason);
+                    MessageBox.Show(
+                        "License validation failed.\n\n" + licenseValidation.Reason,
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return 1;
+                }
+
+                Log.Information("License validation passed: {Reason}", licenseValidation.Reason);
+                LogStage("ETAPA 2", "Validacion de licencia completada OK");
+
+                var isDevelopmentMode = IsDevelopmentMode(baseDirectory);
+                var isProductionMode = !isDevelopmentMode;
+                var shouldRunOneTimeProductionRestore =
+                    isProductionMode &&
+                    configManager.RecreateDatabase &&
+                    configManager.SeedDataRestoreEnabled;
+
+                LogStage(
+                    "ETAPA 2",
+                    shouldRunOneTimeProductionRestore
+                        ? "Modo Production detectado con restore solicitado: se ejecutara recreate+seed y settings quedara en false/false"
+                        : isProductionMode
+                        ? "Modo Production detectado: se continua con flujo normal"
+                        : "Modo Development detectado: se respetan valores de settings"
+                );
 
                 if (args.Any(arg => string.Equals(arg, "--test-transcription", StringComparison.OrdinalIgnoreCase)))
                 {
+                    LogStage("ETAPA TEST", "Modo --test-transcription detectado");
                     return await RunTranscriptionSdkTestAsync(configManager);
                 }
 
                 // Start PocketBase
-                Log.Information("Initializing PocketBase...");
+                LogStage("ETAPA 3", "Inicializando PocketBaseManager");
                 pocketBaseManager = new PocketBaseManager(
+                    pocketBasePath: string.IsNullOrWhiteSpace(configManager.PocketBasePath) ? null : configManager.PocketBasePath,
                     bindIp: configManager.PocketBaseBindIp,
                     port: configManager.PocketBasePort);
+                Log.Debug("[STARTUP][ETAPA 3] Configured pocketbase_path={PocketBasePath}", configManager.PocketBasePath);
+                LogStage("ETAPA 3", $"Iniciando PocketBase con bindIp={configManager.PocketBaseBindIp}, port={configManager.PocketBasePort}");
                 var pocketBaseStarted = await pocketBaseManager.StartAsync();
                 
                 if (!pocketBaseStarted)
                 {
+                    LogStage("ETAPA 3", "PocketBase no inicio correctamente");
                     Log.Error("Failed to start PocketBase. Please ensure pocketbase.exe is available.");
                     MessageBox.Show(
                         "Failed to start PocketBase database.\n\n" +
                         "Please ensure pocketbase.exe is in one of these locations:\n" +
+                        "- C:\\Program Files\\TikTokSuite\\Tools\\PocketBase\\\n" +
                         "- Current directory\n" +
                         "- Application directory\n" +
                         "- C:\\Users\\YOUR_USERNAME\\AppData\\Local\\TikTokManager\\",
@@ -86,8 +142,10 @@ namespace FluxAnswer
                     return 1;
                 }
 
+                LogStage("ETAPA 3", "PocketBase iniciado correctamente");
+
                 // Sync PocketBase schema with models
-                Log.Information("Synchronizing PocketBase schema...");
+                LogStage("ETAPA 4", "Sincronizando schema de PocketBase");
                 
                 var pbOptions = new PocketBaseOptions
                 {
@@ -96,14 +154,22 @@ namespace FluxAnswer
                     AdminPassword = configManager.PocketBaseAdminPassword,
                     EnableAutoSync = true,
                     TimeoutSeconds = 30,
-                    RecreateDatabase = configManager.RecreateDatabase,
-                    EnableSeedDataRestore = configManager.SeedDataRestoreEnabled,
+                    RecreateDatabase = shouldRunOneTimeProductionRestore ? true : configManager.RecreateDatabase,
+                    EnableSeedDataRestore = shouldRunOneTimeProductionRestore ? true : configManager.SeedDataRestoreEnabled,
                     SeedDataDirectory = configManager.SeedDataDirectory
                 };
+
+                if (shouldRunOneTimeProductionRestore)
+                {
+                    // One-time production restore latch: leave flags disabled for next startups.
+                    configManager.DisableOneTimeDatabaseRestoreFlags();
+                }
                 
                 var syncService = new SchemaSyncService(pbOptions);
                 var syncSuccess = await syncService.SyncAsync(Assembly.GetExecutingAssembly());
+
                 var shouldBlockStartupOnSyncError = pbOptions.RecreateDatabase && pbOptions.EnableSeedDataRestore;
+                Log.Debug("[STARTUP][ETAPA 4] syncSuccess={SyncSuccess}, shouldBlockOnError={ShouldBlock}", syncSuccess, shouldBlockStartupOnSyncError);
                 
                 if (!syncSuccess)
                 {
@@ -111,6 +177,7 @@ namespace FluxAnswer
 
                     if (shouldBlockStartupOnSyncError)
                     {
+                        LogStage("ETAPA 4", "Sincronizacion de schema/seed fallo en modo bloqueante");
                         Log.Error("Schema synchronization or seed data restoration failed. Application startup aborted. Reason: {SyncFailureReason}", syncFailureReason ?? "n/a");
                         MessageBox.Show(
                             "Schema synchronization or seed data restoration failed.\n\n" +
@@ -132,19 +199,24 @@ namespace FluxAnswer
                     }
 
                     Log.Warning("Schema synchronization completed with warnings. Continuing startup because recreate/restore critical mode is disabled.");
+                    LogStage("ETAPA 4", "Sincronizacion con advertencias (continua startup)");
                 }
                 else
                 {
                     Log.Information("Schema synchronization completed successfully");
+                    LogStage("ETAPA 4", "Sincronizacion de schema completada OK");
                 }
 
                 // Build DI container
+                LogStage("ETAPA 5", "Construyendo contenedor DI");
                 var services = new ServiceCollection();
                 ConfigureServices(services, configManager, pbOptions);
                 var serviceProvider = services.BuildServiceProvider();
+                LogStage("ETAPA 5", "Contenedor DI construido");
 
                 // Get the main service
                 var videoProcessingService = serviceProvider.GetRequiredService<IVideoProcessingService>();
+                LogStage("ETAPA 6", "Servicio principal IVideoProcessingService resuelto");
 
                 // Set up global exception handling
                 Application.ThreadException += (sender, e) =>
@@ -163,12 +235,14 @@ namespace FluxAnswer
                 // Initialize Windows Forms application
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+                LogStage("ETAPA 7", "Windows Forms inicializado");
 
                 // Create system tray icon
                 using var systemTrayIcon = new SystemTrayIcon(
                     videoProcessingService, 
                     serviceProvider.GetRequiredService<IConfigurationManager>(),
                     pocketBaseManager);
+                LogStage("ETAPA 7", "Icono de bandeja creado");
 
                 // Capture the UI synchronization context
                 var uiContext = System.Threading.SynchronizationContext.Current;
@@ -178,6 +252,7 @@ namespace FluxAnswer
                 {
                     try
                     {
+                        Log.Information("[STARTUP][ETAPA 8] Iniciando VideoProcessingService en segundo plano");
                         await videoProcessingService.StartAsync();
                         
                         if (videoProcessingService.State != ServiceState.Running)
@@ -192,6 +267,7 @@ namespace FluxAnswer
                         else
                         {
                             Log.Information("Service started successfully");
+                            Log.Information("[STARTUP][ETAPA 8] VideoProcessingService en estado Running");
                         }
                     }
                     catch (Exception ex)
@@ -205,15 +281,18 @@ namespace FluxAnswer
                     }
                 });
 
-                Log.Information("System tray interface loaded, service starting in background...");
+                LogStage("ETAPA 8", "System tray listo; servicio arrancando en background");
 
                 // Run the Windows Forms message loop
+                LogStage("ETAPA 9", "Entrando a Application.Run() (loop UI)");
                 Application.Run();
+                LogStage("ETAPA 9", "Application.Run() finalizado");
 
                 // Graceful shutdown
                 Log.Information("Stopping service...");
                 await videoProcessingService.StopAsync();
                 Log.Information("Service stopped successfully");
+                LogStage("ETAPA 10", "Cierre graceful del servicio completado");
 
                 // Stop PocketBase
                 if (pocketBaseManager != null)
@@ -221,12 +300,15 @@ namespace FluxAnswer
                     Log.Information("Stopping PocketBase...");
                     pocketBaseManager.Stop();
                     pocketBaseManager.Dispose();
+                    LogStage("ETAPA 10", "PocketBase detenido");
                 }
 
+                Log.Information("[STARTUP] Finalizado correctamente en {ElapsedMs}ms", startupStopwatch.ElapsedMilliseconds);
                 return 0;
             }
             catch (Exception ex)
             {
+                Log.Error("[STARTUP] Fallo fatal a los {ElapsedMs}ms", startupStopwatch.ElapsedMilliseconds);
                 Log.Fatal(ex, "Application terminated unexpectedly");
                 return 1;
             }

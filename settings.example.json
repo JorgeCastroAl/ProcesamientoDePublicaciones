@@ -15,7 +15,7 @@
   "comments_extraction_limit": 12,
   "custom_comments_per_bot_account": 0,
   "skip_transcription": false,
-  "recreate_database": true,
+  "recreate_database": false,
   "seed_data_restore_enabled": false,
   "seed_data_directory": "SeedData"
 }
