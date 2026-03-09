@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using FluxAnswer.Models;
+using FluxAnswer.Services.Media;
 
 namespace FluxAnswer.Services.Scraping.TikTok
 {
@@ -20,40 +21,10 @@ namespace FluxAnswer.Services.Scraping.TikTok
 
         public CommentsExtractionService(string ytDlpPath = "yt-dlp", int timeoutSeconds = 30)
         {
-            if (ytDlpPath == "yt-dlp")
-            {
-                _ytDlpPath = FindYtDlpExecutable();
-            }
-            else
-            {
-                _ytDlpPath = ytDlpPath;
-            }
+            _ytDlpPath = ExternalToolLocator.ResolveYtDlp(ytDlpPath);
+            Log.Information("CommentsExtractionService configured yt-dlp path: {Path}", _ytDlpPath);
 
             _timeoutSeconds = timeoutSeconds;
-        }
-
-        private string FindYtDlpExecutable()
-        {
-            var possiblePaths = new[]
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "yt-dlp.exe"),
-                Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "yt-dlp.exe"),
-                "yt-dlp.exe",
-                "yt-dlp"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    Log.Information("Found yt-dlp at: {Path}", path);
-                    return path;
-                }
-            }
-
-            Log.Warning("yt-dlp executable not found in common locations, using default path");
-            return "yt-dlp";
         }
 
         public async Task<List<CommentData>> ExtractCommentsAsync(string videoUrl, int limit = 12)

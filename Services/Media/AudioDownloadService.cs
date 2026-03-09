@@ -22,66 +22,12 @@ namespace FluxAnswer.Services.Media
             int maxRetries = 3,
             int retryDelaySeconds = 5)
         {
-            if (ytDlpPath == "yt-dlp")
-            {
-                _ytDlpPath = FindYtDlpExecutable();
-            }
-            else
-            {
-                _ytDlpPath = ytDlpPath;
-            }
+            _ytDlpPath = ExternalToolLocator.ResolveYtDlp(ytDlpPath);
+            Log.Information("AudioDownloadService configured yt-dlp path: {Path}", _ytDlpPath);
 
             _timeoutMinutes = timeoutMinutes;
             _maxRetries = maxRetries;
             _retryDelaySeconds = retryDelaySeconds;
-        }
-
-        private string FindYtDlpExecutable()
-        {
-            var possiblePaths = new[]
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "yt-dlp.exe"),
-                Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "yt-dlp.exe"),
-                "yt-dlp.exe",
-                "yt-dlp"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    Log.Information("Found yt-dlp at: {Path}", path);
-                    return path;
-                }
-            }
-
-            Log.Warning("yt-dlp executable not found in common locations, using default path");
-            return "yt-dlp";
-        }
-
-        private string FindFfmpegExecutable()
-        {
-            var possiblePaths = new[]
-            {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "ffmpeg.exe"),
-                Path.Combine(Environment.CurrentDirectory, "ffmpeg.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe"),
-                "ffmpeg.exe",
-                "ffmpeg"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    Log.Information("Found ffmpeg at: {Path}", path);
-                    return Path.GetDirectoryName(path) ?? path;
-                }
-            }
-
-            Log.Warning("ffmpeg executable not found in common locations, using default path");
-            return "ffmpeg";
         }
 
         public async Task<string> DownloadAudioAsync(string videoUrl, string outputPath)
@@ -148,7 +94,8 @@ namespace FluxAnswer.Services.Media
                 Directory.CreateDirectory(directory);
             }
 
-            var ffmpegPath = FindFfmpegExecutable();
+            var ffmpegPath = ExternalToolLocator.ResolveFfmpegLocation();
+            Log.Information("AudioDownloadService configured ffmpeg location: {Path}", ffmpegPath);
             var arguments = $"-x --audio-format mp3 --audio-quality 192K --ffmpeg-location \"{ffmpegPath}\" -o \"{outputPath}\" \"{videoUrl}\"";
 
             var process = new Process

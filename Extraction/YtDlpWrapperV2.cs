@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
 using FluxAnswer.Models;
+using FluxAnswer.Services.Media;
 
 namespace FluxAnswer.Extraction
 {
@@ -27,51 +28,13 @@ namespace FluxAnswer.Extraction
             int maxComments = 100,
             string? browserForCookies = "chrome")
         {
-            // Try to find yt-dlp in common locations if default path is used
-            if (ytDlpPath == "yt-dlp")
-            {
-                _ytDlpPath = FindYtDlpExecutable();
-            }
-            else
-            {
-                _ytDlpPath = ytDlpPath;
-            }
+            _ytDlpPath = ExternalToolLocator.ResolveYtDlp(ytDlpPath);
+            Log.Information("YtDlpWrapperV2 configured yt-dlp path: {Path}", _ytDlpPath);
             
             _timeoutSeconds = timeoutSeconds;
             _enableComments = enableComments;
             _maxComments = maxComments;
             _browserForCookies = browserForCookies;
-        }
-
-        /// <summary>
-        /// Finds the yt-dlp executable in common locations.
-        /// </summary>
-        private string FindYtDlpExecutable()
-        {
-            // Check common locations
-            var possiblePaths = new[]
-            {
-                System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TikTokSuite", "Tools", "YtDlp", "yt-dlp.exe"),
-                System.IO.Path.GetFullPath(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Tools", "YtDlp", "yt-dlp.exe")),
-                System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "yt-dlp.exe"),
-                System.IO.Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"),
-                System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "yt-dlp.exe"),
-                "yt-dlp.exe", // Try PATH
-                "yt-dlp"      // Try PATH (Linux/Mac)
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (System.IO.File.Exists(path))
-                {
-                    Log.Information("Found yt-dlp at: {Path}", path);
-                    return path;
-                }
-            }
-
-            // Default to PATH
-            Log.Warning("yt-dlp executable not found in common locations, using default path");
-            return "yt-dlp";
         }
 
         /// <summary>

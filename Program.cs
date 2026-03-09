@@ -218,6 +218,65 @@ namespace FluxAnswer
                 var videoProcessingService = serviceProvider.GetRequiredService<IVideoProcessingService>();
                 LogStage("ETAPA 6", "Servicio principal IVideoProcessingService resuelto");
 
+                // Restart service when API endpoints change in settings.json.
+                var lastResponseApiUrl = configManager.ResponseApiUrl;
+                var lastModifyCommentApiUrl = configManager.ModifyCommentApiUrl;
+                var serviceRestartGate = new SemaphoreSlim(1, 1);
+
+                configManager.ConfigurationChanged += (_, _) =>
+                {
+                    var currentResponseApiUrl = configManager.ResponseApiUrl;
+                    var currentModifyCommentApiUrl = configManager.ModifyCommentApiUrl;
+
+                    if (string.Equals(lastResponseApiUrl, currentResponseApiUrl, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(lastModifyCommentApiUrl, currentModifyCommentApiUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return;
+                    }
+
+                    _ = Task.Run(async () =>
+                    {
+                        await serviceRestartGate.WaitAsync();
+                        try
+                        {
+                            var latestResponseApiUrl = configManager.ResponseApiUrl;
+                            var latestModifyCommentApiUrl = configManager.ModifyCommentApiUrl;
+
+                            if (string.Equals(lastResponseApiUrl, latestResponseApiUrl, StringComparison.OrdinalIgnoreCase) &&
+                                string.Equals(lastModifyCommentApiUrl, latestModifyCommentApiUrl, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return;
+                            }
+
+                            Log.Information(
+                                "Detected Opinion API URL change. Restarting service. response_api_url: {OldResponseUrl} -> {NewResponseUrl}; modify_comment_api_url: {OldModifyUrl} -> {NewModifyUrl}",
+                                lastResponseApiUrl,
+                                latestResponseApiUrl,
+                                lastModifyCommentApiUrl,
+                                latestModifyCommentApiUrl);
+
+                            lastResponseApiUrl = latestResponseApiUrl;
+                            lastModifyCommentApiUrl = latestModifyCommentApiUrl;
+
+                            if (videoProcessingService.State == ServiceState.Running ||
+                                videoProcessingService.State == ServiceState.Starting)
+                            {
+                                await videoProcessingService.StopAsync();
+                            }
+
+                            await videoProcessingService.StartAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "Failed to restart service after API URL configuration change");
+                        }
+                        finally
+                        {
+                            serviceRestartGate.Release();
+                        }
+                    });
+                };
+
                 // Set up global exception handling
                 Application.ThreadException += (sender, e) =>
                 {
@@ -499,8 +558,7 @@ namespace FluxAnswer
                 var botAccountRepo = sp.GetRequiredService<IBotAccountRepo>();
                 var botAccountVideoRepo = sp.GetRequiredService<IBotAccountVideoRepo>();
                 return new ResponseGenerationService(
-                    config.ResponseApiUrl,
-                    config.ModifyCommentApiUrl,
+                    config,
                     botAccountRepo,
                     botAccountVideoRepo);
             });

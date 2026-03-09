@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Serilog;
+using FluxAnswer.Configuration;
 using FluxAnswer.Models;
 using FluxAnswer.Repositories;
 
@@ -18,23 +19,18 @@ namespace FluxAnswer.Services.Api
     public class ResponseGenerationService : IResponseGenerationService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _apiUrl;
-        private readonly string _modifyCommentApiUrl;
+        private readonly IConfigurationManager _config;
         private readonly string _apiAuditLogPath;
         private readonly IBotAccountRepo _botAccountRepo;
         private readonly IBotAccountVideoRepo _botAccountVideoRepo;
         private static readonly object _apiAuditLogLock = new object();
 
         public ResponseGenerationService(
-            string apiUrl,
-            string? modifyCommentApiUrl,
+            IConfigurationManager config,
             IBotAccountRepo botAccountRepo,
             IBotAccountVideoRepo botAccountVideoRepo)
         {
-            _apiUrl = apiUrl;
-            _modifyCommentApiUrl = string.IsNullOrWhiteSpace(modifyCommentApiUrl)
-                ? BuildModifyCommentApiUrl(apiUrl)
-                : modifyCommentApiUrl;
+            _config = config;
             _botAccountRepo = botAccountRepo;
             _botAccountVideoRepo = botAccountVideoRepo;
             _httpClient = new HttpClient
@@ -120,8 +116,9 @@ namespace FluxAnswer.Services.Api
 
                 var json = JsonConvert.SerializeObject(request, Formatting.Indented);
                 var requestId = Guid.NewGuid().ToString("N");
+                var apiUrl = GetResponseApiUrl();
                 Log.Information("=== REQUEST TO OPINION API ===");
-                Log.Information("URL: {ApiUrl}", _apiUrl);
+                Log.Information("URL: {ApiUrl}", apiUrl);
                 Log.Information("VideoId: {VideoId}", request.VideoId);
                 Log.Information("Comments: {Comments}", request.Comments != null ? $"{request.Comments.Count} comments" : "null");
                 Log.Information("Transcription: {Transcription}", request.Transcription != null ? $"{request.Transcription.Length} chars" : "null");
@@ -138,7 +135,7 @@ namespace FluxAnswer.Services.Api
                             attempt, maxAttempts, video.TiktokVideoId);
 
                         var content = new StringContent(json, Encoding.UTF8, "application/json");
-                        var response = await _httpClient.PostAsync(_apiUrl, content);
+                        var response = await _httpClient.PostAsync(apiUrl, content);
 
                         Log.Information("=== RESPONSE FROM OPINION API ===");
                         Log.Information("Status Code: {StatusCode}", response.StatusCode);
@@ -151,7 +148,7 @@ namespace FluxAnswer.Services.Api
                             request_id = requestId,
                             attempt,
                             max_attempts = maxAttempts,
-                            url = _apiUrl,
+                            url = apiUrl,
                             video_id = video.TiktokVideoId,
                             request = request,
                             response_status_code = (int)response.StatusCode,
@@ -208,7 +205,7 @@ namespace FluxAnswer.Services.Api
                             request_id = requestId,
                             attempt,
                             max_attempts = maxAttempts,
-                            url = _apiUrl,
+                            url = apiUrl,
                             video_id = video.TiktokVideoId,
                             request = request,
                             success = false,
@@ -240,7 +237,7 @@ namespace FluxAnswer.Services.Api
                             request_id = requestId,
                             attempt,
                             max_attempts = maxAttempts,
-                            url = _apiUrl,
+                            url = apiUrl,
                             video_id = video.TiktokVideoId,
                             request = request,
                             success = false,
@@ -277,7 +274,7 @@ namespace FluxAnswer.Services.Api
                 WriteApiAuditLog(new
                 {
                     timestamp_utc = DateTime.UtcNow,
-                    url = _apiUrl,
+                    url = GetResponseApiUrl(),
                     video_id = video.TiktokVideoId,
                     success = false,
                     error_type = ex.GetType().Name,
@@ -333,7 +330,7 @@ namespace FluxAnswer.Services.Api
                 video.TiktokVideoId,
                 accounts.Count,
                 customCommentsPerAccount,
-                _modifyCommentApiUrl);
+                GetModifyCommentApiUrl());
 
             var totalCreated = 0;
             var hadAccountFailures = false;
@@ -466,9 +463,10 @@ namespace FluxAnswer.Services.Api
             {
                 try
                 {
+                    var modifyCommentApiUrl = GetModifyCommentApiUrl();
                     var requestId = Guid.NewGuid().ToString("N");
                     using var content = new StringContent(json, Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync(_modifyCommentApiUrl, content);
+                    var response = await _httpClient.PostAsync(modifyCommentApiUrl, content);
                     var responseContent = await response.Content.ReadAsStringAsync();
 
                     WriteApiAuditLog(new
@@ -478,7 +476,7 @@ namespace FluxAnswer.Services.Api
                         endpoint = "modify-comment",
                         attempt,
                         max_attempts = maxAttempts,
-                        url = _modifyCommentApiUrl,
+                        url = modifyCommentApiUrl,
                         video_id = video.TiktokVideoId,
                         bot_account_id = account.Id,
                         bot_account_username = account.Username,
@@ -573,6 +571,21 @@ namespace FluxAnswer.Services.Api
             }
 
             return comment.Trim();
+        }
+
+        private string GetResponseApiUrl()
+        {
+            return _config.ResponseApiUrl;
+        }
+
+        private string GetModifyCommentApiUrl()
+        {
+            if (!string.IsNullOrWhiteSpace(_config.ModifyCommentApiUrl))
+            {
+                return _config.ModifyCommentApiUrl;
+            }
+
+            return BuildModifyCommentApiUrl(_config.ResponseApiUrl);
         }
 
         private static string BuildModifyCommentApiUrl(string generateCommentApiUrl)

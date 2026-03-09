@@ -180,14 +180,14 @@
                         "id":  "bf06da7d51bd457",
                         "is_active":  true,
                         "legacy_id":  1,
-                        "credentials":  "hottiktok380",
-                        "password":  "TikKarlos6555@",
+                        "credentials":  "Daniela.vasquezr19@gmail.com",
+                        "password":  "@Daniela1928",
                         "affinity_level":  "IMPARCIAL",
                         "mood_state":  "ALEGRE",
                         "personality_type":  "AMABLE",
                         "gender":  "HOMBRE",
                         "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "hottiktok380",
+                        "username":  "Daniela.vasquezr19@gmail.com",
                         "social_network_id":  "social_tiktok",
                         "accounts_to_follow_ids":  [
 
@@ -201,21 +201,126 @@
                         "id":  "11051c8494f344a",
                         "is_active":  true,
                         "legacy_id":  2,
-                        "credentials":  "jorge77721@gmail.com",
-                        "password":  "hottiktok381_2",
+                        "credentials":  "juanitaramos265",
+                        "password":  "@Juanita1979",
                         "affinity_level":  "FANATICO",
                         "mood_state":  "EUFORICO",
                         "personality_type":  "CONFRONTACIONAL",
                         "gender":  "MUJER",
                         "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "jorge77721@gmail.com",
+                        "username":  "juanitaramos265",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-03-08 00:00:00.000Z",
+                        "description":  "Nueva cuenta bot 3",
+                        "id":  "d3f8a1b74c9e2d0",
+                        "is_active":  true,
+                        "legacy_id":  3,
+                        "credentials":  "danezaursulacastromorales@gmail.com",
+                        "password":  "@Cometa123",
+                        "affinity_level":  "IMPARCIAL",
+                        "mood_state":  "ALEGRE",
+                        "personality_type":  "AMABLE",
+                        "gender":  "MUJER",
+                        "updated":  "2026-03-08 00:00:00.000Z",
+                        "username":  "danezaursulacastromorales@gmail.com",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-03-08 00:00:00.000Z",
+                        "description":  "Nueva cuenta bot 4",
+                        "id":  "a19c5e7d2b4f860",
+                        "is_active":  true,
+                        "legacy_id":  4,
+                        "credentials":  "alonsorodriguez.gonsales87@gmail.com",
+                        "password":  "@Titanes987",
+                        "affinity_level":  "FANATICO",
+                        "mood_state":  "EUFORICO",
+                        "personality_type":  "CONFRONTACIONAL",
+                        "gender":  "HOMBRE",
+                        "updated":  "2026-03-08 00:00:00.000Z",
+                        "username":  "alonsorodriguez.gonsales87@gmail.com",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-03-08 00:00:00.000Z",
+                        "description":  "Nueva cuenta bot 5",
+                        "id":  "c67e2f9a1d4b803",
+                        "is_active":  true,
+                        "legacy_id":  5,
+                        "credentials":  "mariaelenaprado98@gmail.com",
+                        "password":  "@Mariaelena98",
+                        "affinity_level":  "IMPARCIAL",
+                        "mood_state":  "ALEGRE",
+                        "personality_type":  "AMABLE",
+                        "gender":  "MUJER",
+                        "updated":  "2026-03-08 00:00:00.000Z",
+                        "username":  "mariaelenaprado98@gmail.com",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-03-08 00:00:00.000Z",
+                        "description":  "Nueva cuenta bot 6",
+                        "id":  "b4d7a2e9f1c6805",
+                        "is_active":  true,
+                        "legacy_id":  6,
+                        "credentials":  "wquiroz442@gmail.com",
+                        "password":  "@WENDY1989",
+                        "affinity_level":  "FANATICO",
+                        "mood_state":  "EUFORICO",
+                        "personality_type":  "CONFRONTACIONAL",
+                        "gender":  "MUJER",
+                        "updated":  "2026-03-08 00:00:00.000Z",
+                        "username":  "wquiroz442@gmail.com",
+                        "social_network_id":  "social_tiktok",
+                        "accounts_to_follow_ids":  [
+
+                                                   ]
+                    },
+                    {
+                        "collectionId":  "bot_accounts",
+                        "collectionName":  "bot_account",
+                        "created":  "2026-03-08 00:00:00.000Z",
+                        "description":  "Nueva cuenta bot 7",
+                        "id":  "e8a3c1f5d9b6204",
+                        "is_active":  true,
+                        "legacy_id":  7,
+                        "credentials":  "narvaezdavid455@gmail.com",
+                        "password":  "@Davidnarvaez89",
+                        "affinity_level":  "IMPARCIAL",
+                        "mood_state":  "ALEGRE",
+                        "personality_type":  "AMABLE",
+                        "gender":  "HOMBRE",
+                        "updated":  "2026-03-08 00:00:00.000Z",
+                        "username":  "narvaezdavid455@gmail.com",
                         "social_network_id":  "social_tiktok",
                         "accounts_to_follow_ids":  [
 
                                                    ]
                     }
                 ],
-    "totalRecords":  2,
+    "totalRecords":  7,
     "backupDate":  "2026-02-28 13:18:40",
     "collection":  "bot_account",
     "collectionId":  "bot_accounts"
