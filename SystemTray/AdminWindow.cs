@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using FluxAnswer.Configuration;
+using FluxAnswer.Extraction;
 using FluxAnswer.Services;
 using Serilog;
 
@@ -38,6 +39,8 @@ namespace FluxAnswer.SystemTray
         private TextBox _apiKeyInput = null!;
         private TextBox _responseApiUrlInput = null!;
         private TextBox _modifyCommentApiUrlInput = null!;
+        private ComboBox _extractionModeCombo = null!;
+        private NumericUpDown _searchMaxAgeDaysInput = null!;
 
         public AdminWindow(
             IVideoProcessingService service, 
@@ -61,7 +64,7 @@ namespace FluxAnswer.SystemTray
         private void InitializeComponents()
         {
             Text = "FluxAnswer - Administration";
-            Size = new Size(585, 578);
+            Size = new Size(585, 608);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
@@ -322,14 +325,14 @@ namespace FluxAnswer.SystemTray
                 AutoSize = true,
                 Dock = DockStyle.Top,
                 Padding = new Padding(10),
-                Height = 180
+                Height = 210
             };
 
             var panel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 4,
-                RowCount = 5,
+                RowCount = 6,
                 AutoSize = true
             };
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
@@ -337,8 +340,20 @@ namespace FluxAnswer.SystemTray
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 130F));
             panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-            // Row 0: Comments + Skip Transcription
-            AddConfigLabel(panel, 0, 0, "Comments:");
+            // Row 0: Extraction Mode + Comments
+            AddConfigLabel(panel, 0, 0, "Extraction:");
+            _extractionModeCombo = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 90,
+                Anchor = AnchorStyles.Left,
+            };
+            _extractionModeCombo.Items.AddRange(new object[] { "yt-dlp", "TikTokApi" });
+            _extractionModeCombo.SelectedIndex = 0;
+            _extractionModeCombo.SelectedIndexChanged += OnExtractionModeChanged;
+            panel.Controls.Add(_extractionModeCombo, 1, 0);
+
+            AddConfigLabel(panel, 0, 2, "Comments:");
             _commentsLimitInput = new NumericUpDown
             {
                 Minimum = 1,
@@ -347,8 +362,9 @@ namespace FluxAnswer.SystemTray
                 Width = 60,
                 Anchor = AnchorStyles.Left
             };
-            panel.Controls.Add(_commentsLimitInput, 1, 0);
+            panel.Controls.Add(_commentsLimitInput, 3, 0);
 
+            // Row 1: Skip Transcription + Search Max Age Days
             var skipLabel = new Label
             {
                 Text = "Skip Transcription:",
@@ -358,7 +374,7 @@ namespace FluxAnswer.SystemTray
                 Font = new Font(Font, FontStyle.Regular),
                 Padding = new Padding(5, 8, 5, 5)
             };
-            panel.Controls.Add(skipLabel, 2, 0);
+            panel.Controls.Add(skipLabel, 0, 1);
             
             _skipTranscriptionCheckbox = new CheckBox
             {
@@ -366,48 +382,59 @@ namespace FluxAnswer.SystemTray
                 Anchor = AnchorStyles.Left,
                 AutoSize = true
             };
-            panel.Controls.Add(_skipTranscriptionCheckbox, 3, 0);
+            panel.Controls.Add(_skipTranscriptionCheckbox, 1, 1);
 
-            // Row 1: Audio Folder
-            AddConfigLabel(panel, 1, 0, "Audio Folder:");
+            AddConfigLabel(panel, 1, 2, "Max Age (days):");
+            _searchMaxAgeDaysInput = new NumericUpDown
+            {
+                Minimum = 1,
+                Maximum = 365,
+                Value = 7,
+                Width = 60,
+                Anchor = AnchorStyles.Left
+            };
+            panel.Controls.Add(_searchMaxAgeDaysInput, 3, 1);
+
+            // Row 2: Audio Folder
+            AddConfigLabel(panel, 2, 0, "Audio Folder:");
             var tempDirPanel = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0) };
             _tempDirectoryInput = new TextBox { Width = 340 };
             var browseTempBtn = new Button { Text = "...", Width = 35, Height = 22 };
             browseTempBtn.Click += OnBrowseTempDirectory;
             tempDirPanel.Controls.Add(_tempDirectoryInput);
             tempDirPanel.Controls.Add(browseTempBtn);
-            panel.Controls.Add(tempDirPanel, 1, 1);
+            panel.Controls.Add(tempDirPanel, 1, 2);
             panel.SetColumnSpan(tempDirPanel, 3);
 
-            // Row 2: API Key
-            AddConfigLabel(panel, 2, 0, "API Key:");
+            // Row 3: API Key
+            AddConfigLabel(panel, 3, 0, "API Key:");
             _apiKeyInput = new TextBox
             {
                 Width = 380,
                 Anchor = AnchorStyles.Left,
                 PasswordChar = '*'
             };
-            panel.Controls.Add(_apiKeyInput, 1, 2);
+            panel.Controls.Add(_apiKeyInput, 1, 3);
             panel.SetColumnSpan(_apiKeyInput, 3);
 
-            // Row 3: Response URL
-            AddConfigLabel(panel, 3, 0, "Response URL:");
+            // Row 4: Response URL
+            AddConfigLabel(panel, 4, 0, "Response URL:");
             _responseApiUrlInput = new TextBox
             {
                 Width = 380,
                 Anchor = AnchorStyles.Left
             };
-            panel.Controls.Add(_responseApiUrlInput, 1, 3);
+            panel.Controls.Add(_responseApiUrlInput, 1, 4);
             panel.SetColumnSpan(_responseApiUrlInput, 3);
 
-            // Row 4: Modify Comment URL
-            AddConfigLabel(panel, 4, 0, "Modify URL:");
+            // Row 5: Modify Comment URL
+            AddConfigLabel(panel, 5, 0, "Modify URL:");
             _modifyCommentApiUrlInput = new TextBox
             {
                 Width = 380,
                 Anchor = AnchorStyles.Left
             };
-            panel.Controls.Add(_modifyCommentApiUrlInput, 1, 4);
+            panel.Controls.Add(_modifyCommentApiUrlInput, 1, 5);
             panel.SetColumnSpan(_modifyCommentApiUrlInput, 3);
 
             group.Controls.Add(panel);
@@ -507,6 +534,25 @@ namespace FluxAnswer.SystemTray
             _apiKeyInput.Text = _config.AssemblyAIApiKey;
             _responseApiUrlInput.Text = _config.ResponseApiUrl;
             _modifyCommentApiUrlInput.Text = _config.ModifyCommentApiUrl;
+            _extractionModeCombo.SelectedIndex = _service.ExtractionMode == Extraction.ExtractionMode.TikTokApiSearch ? 1 : 0;
+            _searchMaxAgeDaysInput.Value = Math.Clamp(_config.SearchMaxAgeDays, 1, 365);
+        }
+
+        private async void OnExtractionModeChanged(object? sender, EventArgs e)
+        {
+            var mode = _extractionModeCombo.SelectedIndex == 1
+                ? Extraction.ExtractionMode.TikTokApiSearch
+                : Extraction.ExtractionMode.YtDlp;
+
+            try
+            {
+                await _service.SetExtractionModeAsync(mode);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error switching extraction mode: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void OnRefreshTick(object? sender, EventArgs e)
@@ -719,6 +765,8 @@ namespace FluxAnswer.SystemTray
                 var previousApiKey = ReadStringSetting(settings, "assemblyai_api_key", _config.AssemblyAIApiKey);
                 var previousResponseApiUrl = ReadStringSetting(settings, "response_api_url", _config.ResponseApiUrl);
                 var previousModifyCommentApiUrl = ReadStringSetting(settings, "modify_comment_api_url", _config.ModifyCommentApiUrl);
+                var previousSearchMaxAgeDays = ReadIntSetting(settings, "search_max_age_days", _config.SearchMaxAgeDays);
+                var previousExtractionMode = ReadStringSetting(settings, "extraction_mode", _config.ExtractionMode);
 
                 var newCommentsLimit = (int)_commentsLimitInput.Value;
                 var newSkipTranscription = _skipTranscriptionCheckbox.Checked;
@@ -726,10 +774,13 @@ namespace FluxAnswer.SystemTray
                 var newApiKey = _apiKeyInput.Text;
                 var newResponseApiUrl = _responseApiUrlInput.Text;
                 var newModifyCommentApiUrl = _modifyCommentApiUrlInput.Text;
+                var newSearchMaxAgeDays = (int)_searchMaxAgeDaysInput.Value;
+                var newExtractionMode = _extractionModeCombo.SelectedIndex == 1 ? "TikTokApi" : "yt-dlp";
 
                 var hasConfigChanges =
                     previousCommentsLimit != newCommentsLimit ||
                     previousSkipTranscription != newSkipTranscription ||
+                    previousSearchMaxAgeDays != newSearchMaxAgeDays ||
                     !string.Equals(previousTempDirectory, newTempDirectory, StringComparison.Ordinal) ||
                     !string.Equals(previousApiKey, newApiKey, StringComparison.Ordinal) ||
                     !string.Equals(previousResponseApiUrl, newResponseApiUrl, StringComparison.Ordinal) ||
@@ -741,6 +792,7 @@ namespace FluxAnswer.SystemTray
                 settings["assemblyai_api_key"] = newApiKey;
                 settings["response_api_url"] = newResponseApiUrl;
                 settings["modify_comment_api_url"] = newModifyCommentApiUrl;
+                settings["search_max_age_days"] = newSearchMaxAgeDays;
 
                 var newJson = Newtonsoft.Json.JsonConvert.SerializeObject(settings, Newtonsoft.Json.Formatting.Indented);
                 System.IO.File.WriteAllText(configPath, newJson);
@@ -911,14 +963,14 @@ namespace FluxAnswer.SystemTray
                 {
                     var dbPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "TikTokManager",
+                        "TikTokSuite",
                         "pocketbase_data",
                         "data.db"
                     );
 
                     var sqlite3Path = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "TikTokManager",
+                        "TikTokSuite",
                         "sqlite3.exe"
                     );
 

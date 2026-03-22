@@ -36,7 +36,7 @@ namespace FluxAnswer
             // Configure Serilog
             var logDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "TikTokManager",
+                "TikTokSuite",
                 "logs"
             );
 
@@ -135,7 +135,7 @@ namespace FluxAnswer
                         "- C:\\Program Files\\TikTokSuite\\Tools\\PocketBase\\\n" +
                         "- Current directory\n" +
                         "- Application directory\n" +
-                        "- C:\\Users\\YOUR_USERNAME\\AppData\\Local\\TikTokManager\\",
+                        "- C:\\Users\\YOUR_USERNAME\\AppData\\Local\\TikTokSuite\\",
                         "PocketBase Error",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -156,7 +156,8 @@ namespace FluxAnswer
                     TimeoutSeconds = 30,
                     RecreateDatabase = shouldRunOneTimeProductionRestore ? true : configManager.RecreateDatabase,
                     EnableSeedDataRestore = shouldRunOneTimeProductionRestore ? true : configManager.SeedDataRestoreEnabled,
-                    SeedDataDirectory = configManager.SeedDataDirectory
+                    SeedDataDirectory = configManager.SeedDataDirectory,
+                    PocketBasePath = configManager.PocketBasePath
                 };
 
                 if (shouldRunOneTimeProductionRestore)
@@ -420,7 +421,7 @@ namespace FluxAnswer
         {
             var localConfigDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "TikTokManager");
+                "TikTokSuite");
             Directory.CreateDirectory(localConfigDirectory);
 
             var localConfigPath = Path.Combine(localConfigDirectory, "settings.json");
@@ -531,7 +532,7 @@ namespace FluxAnswer
                 var videoRepo = sp.GetRequiredService<IVideoRepo>();
                 var ytDlp = sp.GetRequiredService<IYtDlpWrapper>();
                 var socialNetworkRepo = sp.GetRequiredService<ISocialNetworkRepo>();
-                return new VideoExtractionService(videoRepo, ytDlp, socialNetworkRepo);
+                return new VideoExtractionService(videoRepo, ytDlp, socialNetworkRepo, sp.GetRequiredService<IConfigurationManager>());
             });
             services.AddSingleton<IExtractionCycleManager>(sp =>
             {
@@ -541,9 +542,33 @@ namespace FluxAnswer
                 return new ExtractionCycleManager(accountRepo, extractionService, config);
             });
 
+            // Search criteria repository
+            services.AddSingleton<ISearchCriteriaRepo>(sp =>
+                new SearchCriteriaRepo(sp.GetRequiredService<PocketBaseOptions>()));
+
+            // TikTokApi search service
+            services.AddSingleton<ITikTokApiSearchService>(sp =>
+                new TikTokApiSearchService());
+
+            // Search extraction cycle manager
+            services.AddSingleton<ISearchExtractionCycleManager>(sp =>
+                new SearchExtractionCycleManager(
+                    sp.GetRequiredService<IAccountToFollowRepo>(),
+                    sp.GetRequiredService<ISearchCriteriaRepo>(),
+                    sp.GetRequiredService<ITikTokApiSearchService>(),
+                    sp.GetRequiredService<IVideoRepo>(),
+                    sp.GetRequiredService<ISocialNetworkRepo>(),
+                    sp.GetRequiredService<IConfigurationManager>()));
+
+            // Repositories (extracted comments)
+            services.AddSingleton<IExtractedCommentRepo>(sp =>
+                new ExtractedCommentRepo(sp.GetRequiredService<PocketBaseOptions>()));
+
             // Processing services
             services.AddSingleton<IAudioDownloadService, AudioDownloadService>();
-            services.AddSingleton<ICommentsExtractionService, CommentsExtractionService>();
+            services.AddSingleton<ICommentsExtractionService>(sp =>
+                new TikTokWebCommentsExtractionService(
+                    sp.GetRequiredService<IExtractedCommentRepo>()));
             services.AddSingleton<ITranscriptionService>(sp =>
             {
                 var config = sp.GetRequiredService<IConfigurationManager>();
@@ -551,7 +576,16 @@ namespace FluxAnswer
             });
             services.AddSingleton<IAudioStageService, AudioStageService>();
             services.AddSingleton<ITranscriptionStageService, TranscriptionStageService>();
-            services.AddSingleton<IBotAccountVideoStageService, BotAccountVideoStageService>();
+            services.AddSingleton<IDefaultCommentRepo>(sp =>
+                new DefaultCommentRepo(sp.GetRequiredService<PocketBaseOptions>()));
+            services.AddSingleton<IBotAccountVideoStageService>(sp =>
+                new BotAccountVideoStageService(
+                    sp.GetRequiredService<IVideoRepo>(),
+                    sp.GetRequiredService<IResponseGenerationService>(),
+                    sp.GetRequiredService<IBotAccountRepo>(),
+                    sp.GetRequiredService<IBotAccountVideoRepo>(),
+                    sp.GetRequiredService<IDefaultCommentRepo>(),
+                    sp.GetRequiredService<IConfigurationManager>()));
             services.AddSingleton<IResponseGenerationService>(sp =>
             {
                 var config = sp.GetRequiredService<IConfigurationManager>();
@@ -566,21 +600,26 @@ namespace FluxAnswer
             {
                 var videoRepo = sp.GetRequiredService<IVideoRepo>();
                 var responseService = sp.GetRequiredService<IResponseGenerationService>();
-                return new VideoResponseStageService(videoRepo, responseService);
+                return new VideoResponseStageService(videoRepo, responseService, sp.GetRequiredService<IExtractedCommentRepo>());
             });
+            services.AddSingleton<ICommentsStageService>(sp =>
+                new CommentsStageService(
+                    sp.GetRequiredService<IVideoRepo>(),
+                    sp.GetRequiredService<ICommentsExtractionService>(),
+                    sp.GetRequiredService<IConfigurationManager>()));
             services.AddSingleton<ITikTokPipelineManager>(sp =>
             {
                 var videoRepo = sp.GetRequiredService<IVideoRepo>();
-                var commentsService = sp.GetRequiredService<ICommentsExtractionService>();
                 var audioStageService = sp.GetRequiredService<IAudioStageService>();
+                var commentsStageService = sp.GetRequiredService<ICommentsStageService>();
                 var transcriptionStageService = sp.GetRequiredService<ITranscriptionStageService>();
                 var responseStageService = sp.GetRequiredService<IVideoResponseStageService>();
                 var botAccountVideoStageService = sp.GetRequiredService<IBotAccountVideoStageService>();
                 var config = sp.GetRequiredService<IConfigurationManager>();
                 return new TikTokPipelineManager(
                     videoRepo,
-                    commentsService,
                     audioStageService,
+                    commentsStageService,
                     transcriptionStageService,
                     responseStageService,
                     botAccountVideoStageService,
@@ -592,9 +631,11 @@ namespace FluxAnswer
             services.AddSingleton<IVideoProcessingService>(sp =>
             {
                 var validator = sp.GetRequiredService<StartupValidator>();
-                var extractionManager = sp.GetRequiredService<IExtractionCycleManager>();
+                var ytDlpExtraction = sp.GetRequiredService<IExtractionCycleManager>();
+                var searchExtraction = sp.GetRequiredService<ISearchExtractionCycleManager>();
                 var processingManager = sp.GetRequiredService<ITikTokPipelineManager>();
-                return new VideoProcessingService(validator, extractionManager, processingManager);
+                var config = sp.GetRequiredService<IConfigurationManager>();
+                return new VideoProcessingService(validator, ytDlpExtraction, searchExtraction, processingManager, config);
             });
         }
     }

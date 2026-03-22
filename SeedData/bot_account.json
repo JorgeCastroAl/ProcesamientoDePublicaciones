@@ -8,11 +8,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "noDecimal":  false
-                                   }
+                       "options":  { "min":  null, "max":  null, "noDecimal":  false }
                    },
                    {
                        "system":  false,
@@ -22,13 +18,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "collectionId":  "social_network",
-                                       "cascadeDelete":  false,
-                                       "minSelect":  null,
-                                       "maxSelect":  1,
-                                       "displayFields":  null
-                                   }
+                       "options":  { "collectionId":  "social_network", "cascadeDelete":  false, "minSelect":  null, "maxSelect":  1, "displayFields":  null }
                    },
                    {
                        "system":  false,
@@ -38,11 +28,7 @@
                        "required":  true,
                        "presentable":  true,
                        "unique":  true,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  ""
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
                    },
                    {
                        "system":  false,
@@ -52,11 +38,7 @@
                        "required":  true,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  ""
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
                    },
                    {
                        "system":  false,
@@ -66,11 +48,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  ""
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
                    },
                    {
                        "system":  false,
@@ -80,11 +58,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  ""
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
                    },
                    {
                        "system":  false,
@@ -94,11 +68,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  "^(IMPARCIAL|FANATICO|PARCIALIZADO)?$"
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "^(IMPARCIAL|FANATICO|PARCIALIZADO)?$" }
                    },
                    {
                        "system":  false,
@@ -108,11 +78,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  "^(ALEGRE|MOLESTO|EUFORICO)?$"
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "^(ALEGRE|MOLESTO|EUFORICO)?$" }
                    },
                    {
                        "system":  false,
@@ -122,11 +88,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  "^(AMABLE|CONFRONTACIONAL|TECNICO)?$"
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "^(AMABLE|CONFRONTACIONAL|TECNICO)?$" }
                    },
                    {
                        "system":  false,
@@ -136,11 +98,7 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "min":  null,
-                                       "max":  null,
-                                       "pattern":  "^(MUJER|HOMBRE|NEUTRO)?$"
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "^(MUJER|HOMBRE|NEUTRO)?$" }
                    },
                    {
                        "system":  false,
@@ -150,178 +108,148 @@
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-
-                                   }
+                       "options":  {}
                    },
                    {
                        "system":  false,
-                       "id":  "accounts_to_follow_ids",
-                       "name":  "accounts_to_follow_ids",
-                       "type":  "relation",
+                       "id":  "proxy_url",
+                       "name":  "proxy_url",
+                       "type":  "text",
                        "required":  false,
                        "presentable":  false,
                        "unique":  false,
-                       "options":  {
-                                       "collectionId":  "account_to_follow",
-                                       "cascadeDelete":  false,
-                                       "minSelect":  null,
-                                       "maxSelect":  null,
-                                       "displayFields":  null
-                                   }
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "home_url",
+                       "name":  "home_url",
+                       "type":  "text",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  { "min":  null, "max":  null, "pattern":  "" }
+                   },
+                   {
+                       "system":  false,
+                       "id":  "auto_login",
+                       "name":  "auto_login",
+                       "type":  "bool",
+                       "required":  false,
+                       "presentable":  false,
+                       "unique":  false,
+                       "options":  {}
                    }
                ],
     "records":  [
                     {
                         "collectionId":  "bot_accounts",
                         "collectionName":  "bot_account",
-                        "created":  "2026-02-25 18:28:54.752Z",
-                        "description":  "Nueva cuenta bot",
-                        "id":  "bf06da7d51bd457",
+                        "created":  "2026-03-19 00:00:00.000Z",
+                        "description":  "Cuenta bot 1",
+                        "id":  "ba01_hottiktok380",
                         "is_active":  true,
                         "legacy_id":  1,
-                        "credentials":  "Daniela.vasquezr19@gmail.com",
-                        "password":  "@Daniela1928",
+                        "credentials":  "hottiktok380",
+                        "password":  "TikKarlos6555@",
                         "affinity_level":  "IMPARCIAL",
                         "mood_state":  "ALEGRE",
                         "personality_type":  "AMABLE",
-                        "gender":  "HOMBRE",
-                        "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "Daniela.vasquezr19@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
+                        "gender":  "NEUTRO",
+                        "proxy_url":  null,
+                        "home_url":  "https://www.tiktok.com",
+                        "auto_login":  true,
+                        "updated":  "2026-03-19 00:00:00.000Z",
+                        "username":  "hottiktok380",
+                        "social_network_id":  "social_tiktok"
                     },
                     {
                         "collectionId":  "bot_accounts",
                         "collectionName":  "bot_account",
-                        "created":  "2026-02-25 18:28:54.752Z",
-                        "description":  "Nueva cuenta bot 2",
-                        "id":  "11051c8494f344a",
+                        "created":  "2026-03-19 00:00:00.000Z",
+                        "description":  "Cuenta bot 2",
+                        "id":  "ba02_karlaherrera",
                         "is_active":  true,
                         "legacy_id":  2,
-                        "credentials":  "juanitaramos265",
-                        "password":  "@Juanita1979",
+                        "credentials":  "karlaherrera411",
+                        "password":  "TikKarlos6555@34",
                         "affinity_level":  "FANATICO",
                         "mood_state":  "EUFORICO",
                         "personality_type":  "CONFRONTACIONAL",
                         "gender":  "MUJER",
-                        "updated":  "2026-02-25 18:28:54.752Z",
-                        "username":  "juanitaramos265",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
+                        "proxy_url":  null,
+                        "home_url":  "https://www.tiktok.com",
+                        "auto_login":  true,
+                        "updated":  "2026-03-19 00:00:00.000Z",
+                        "username":  "karlaherrera411",
+                        "social_network_id":  "social_tiktok"
                     },
                     {
                         "collectionId":  "bot_accounts",
                         "collectionName":  "bot_account",
-                        "created":  "2026-03-08 00:00:00.000Z",
-                        "description":  "Nueva cuenta bot 3",
-                        "id":  "d3f8a1b74c9e2d0",
+                        "created":  "2026-03-19 00:00:00.000Z",
+                        "description":  "Cuenta bot 3",
+                        "id":  "ba03_carlosherrera",
                         "is_active":  true,
                         "legacy_id":  3,
-                        "credentials":  "danezaursulacastromorales@gmail.com",
-                        "password":  "@Cometa123",
+                        "credentials":  "carlosherreravalencia76@gmail.com",
+                        "password":  "TikKarlos6555@34",
                         "affinity_level":  "IMPARCIAL",
                         "mood_state":  "ALEGRE",
-                        "personality_type":  "AMABLE",
-                        "gender":  "MUJER",
-                        "updated":  "2026-03-08 00:00:00.000Z",
-                        "username":  "danezaursulacastromorales@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
+                        "personality_type":  "TECNICO",
+                        "gender":  "HOMBRE",
+                        "proxy_url":  null,
+                        "home_url":  "https://www.tiktok.com",
+                        "auto_login":  true,
+                        "updated":  "2026-03-19 00:00:00.000Z",
+                        "username":  "carlosherreravalencia76@gmail.com",
+                        "social_network_id":  "social_tiktok"
                     },
                     {
                         "collectionId":  "bot_accounts",
                         "collectionName":  "bot_account",
-                        "created":  "2026-03-08 00:00:00.000Z",
-                        "description":  "Nueva cuenta bot 4",
-                        "id":  "a19c5e7d2b4f860",
+                        "created":  "2026-03-19 00:00:00.000Z",
+                        "description":  "Cuenta bot 4",
+                        "id":  "ba04_monicacardena",
                         "is_active":  true,
                         "legacy_id":  4,
-                        "credentials":  "alonsorodriguez.gonsales87@gmail.com",
-                        "password":  "@Titanes987",
+                        "credentials":  "monicacardenasaraujo@proton.me",
+                        "password":  "MyPassword12345@",
                         "affinity_level":  "FANATICO",
                         "mood_state":  "EUFORICO",
                         "personality_type":  "CONFRONTACIONAL",
-                        "gender":  "HOMBRE",
-                        "updated":  "2026-03-08 00:00:00.000Z",
-                        "username":  "alonsorodriguez.gonsales87@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
+                        "gender":  "MUJER",
+                        "proxy_url":  null,
+                        "home_url":  "https://www.tiktok.com",
+                        "auto_login":  true,
+                        "updated":  "2026-03-19 00:00:00.000Z",
+                        "username":  "monicacardenasaraujo@proton.me",
+                        "social_network_id":  "social_tiktok"
                     },
                     {
                         "collectionId":  "bot_accounts",
                         "collectionName":  "bot_account",
-                        "created":  "2026-03-08 00:00:00.000Z",
-                        "description":  "Nueva cuenta bot 5",
-                        "id":  "c67e2f9a1d4b803",
+                        "created":  "2026-03-19 00:00:00.000Z",
+                        "description":  "Cuenta bot 5",
+                        "id":  "ba05_carolinbella",
                         "is_active":  true,
                         "legacy_id":  5,
-                        "credentials":  "mariaelenaprado98@gmail.com",
-                        "password":  "@Mariaelena98",
+                        "credentials":  "carolinbella2004@proton.me",
+                        "password":  "MyPassword12345@",
                         "affinity_level":  "IMPARCIAL",
                         "mood_state":  "ALEGRE",
                         "personality_type":  "AMABLE",
                         "gender":  "MUJER",
-                        "updated":  "2026-03-08 00:00:00.000Z",
-                        "username":  "mariaelenaprado98@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
-                    },
-                    {
-                        "collectionId":  "bot_accounts",
-                        "collectionName":  "bot_account",
-                        "created":  "2026-03-08 00:00:00.000Z",
-                        "description":  "Nueva cuenta bot 6",
-                        "id":  "b4d7a2e9f1c6805",
-                        "is_active":  true,
-                        "legacy_id":  6,
-                        "credentials":  "wquiroz442@gmail.com",
-                        "password":  "@WENDY1989",
-                        "affinity_level":  "FANATICO",
-                        "mood_state":  "EUFORICO",
-                        "personality_type":  "CONFRONTACIONAL",
-                        "gender":  "MUJER",
-                        "updated":  "2026-03-08 00:00:00.000Z",
-                        "username":  "wquiroz442@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
-                    },
-                    {
-                        "collectionId":  "bot_accounts",
-                        "collectionName":  "bot_account",
-                        "created":  "2026-03-08 00:00:00.000Z",
-                        "description":  "Nueva cuenta bot 7",
-                        "id":  "e8a3c1f5d9b6204",
-                        "is_active":  true,
-                        "legacy_id":  7,
-                        "credentials":  "narvaezdavid455@gmail.com",
-                        "password":  "@Davidnarvaez89",
-                        "affinity_level":  "IMPARCIAL",
-                        "mood_state":  "ALEGRE",
-                        "personality_type":  "AMABLE",
-                        "gender":  "HOMBRE",
-                        "updated":  "2026-03-08 00:00:00.000Z",
-                        "username":  "narvaezdavid455@gmail.com",
-                        "social_network_id":  "social_tiktok",
-                        "accounts_to_follow_ids":  [
-
-                                                   ]
+                        "proxy_url":  null,
+                        "home_url":  "https://www.tiktok.com",
+                        "auto_login":  true,
+                        "updated":  "2026-03-19 00:00:00.000Z",
+                        "username":  "carolinbella2004@proton.me",
+                        "social_network_id":  "social_tiktok"
                     }
                 ],
-    "totalRecords":  7,
-    "backupDate":  "2026-02-28 13:18:40",
+    "totalRecords":  5,
+    "backupDate":  "2026-03-19 00:00:00",
     "collection":  "bot_account",
     "collectionId":  "bot_accounts"
 }

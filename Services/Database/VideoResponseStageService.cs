@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using FluxAnswer.Models;
@@ -15,58 +16,65 @@ namespace FluxAnswer.Services.Database
     {
         private readonly IVideoRepo _videoRepo;
         private readonly IResponseGenerationService _responseService;
+        private readonly IExtractedCommentRepo _commentRepo;
 
         public VideoResponseStageService(
             IVideoRepo videoRepo,
-            IResponseGenerationService responseService)
+            IResponseGenerationService responseService,
+            IExtractedCommentRepo commentRepo)
         {
             _videoRepo = videoRepo;
             _responseService = responseService;
+            _commentRepo = commentRepo;
         }
 
-        public async Task ProcessAsync(VideoRecord video, bool skipTranscription, List<CommentData>? comments = null)
+        public async Task ProcessAsync(VideoRecord video)
         {
+            if (video.ResponseGenerated)
+            {
+                Log.Information("[OK] Response already generated for {VideoId}, skipping", video.TiktokVideoId);
+                return;
+            }
+
             bool hasAnyInput = video.CommentsExtracted
                 || !string.IsNullOrWhiteSpace(video.Transcription)
                 || !string.IsNullOrWhiteSpace(video.Title);
 
-            if (video.ResponseGenerated)
-            {
-                Log.Information("[OK] Step 4/4: Response already generated, skipping");
-                return;
-            }
-
             if (!hasAnyInput)
             {
-                Log.Information("[WAIT] Step 4/4: Cannot generate response yet - No input data available");
-                Log.Information("  - Comments Extracted: {CommentsExtracted}", video.CommentsExtracted);
-                Log.Information("  - Has Transcription Text: {HasTranscriptionText}", !string.IsNullOrWhiteSpace(video.Transcription));
-                Log.Information("  - Has Title: {HasTitle}", !string.IsNullOrWhiteSpace(video.Title));
-                Log.Information("  - Skip Transcription: {SkipTranscription}", skipTranscription);
+                Log.Information("[WAIT] Cannot generate response for {VideoId} - No input data available", video.TiktokVideoId);
                 return;
             }
 
             try
             {
-                Log.Information("Step 4/4: Generating response for {VideoId}", video.TiktokVideoId);
-                Log.Information("=== RESPONSE GENERATION START ===");
-                Log.Information("Video ID: {VideoId}", video.Id);
-                Log.Information("TikTok Video ID: {TiktokVideoId}", video.TiktokVideoId);
+                Log.Information("Generating response for {VideoId}", video.TiktokVideoId);
 
                 video.SetStatus(VideoStatus.GeneratingResponse);
                 await UpdateVideoAsync(video);
 
-                var responseInputComments = comments ?? new List<CommentData>();
-                Log.Information("Using {Count} comments for response generation", responseInputComments.Count);
+                // Leer comentarios desde PocketBase
+                var extractedRecords = await _commentRepo.GetByVideoIdAsync(video.VideoUrl);
+                var comments = extractedRecords
+                    .Select(r => new CommentData
+                    {
+                        CommentId = r.CommentExternalId,
+                        Text = r.Text,
+                        Author = r.Author,
+                        LikeCount = r.LikeCount,
+                    })
+                    .ToList();
 
-                if (responseInputComments.Count == 0 && string.IsNullOrWhiteSpace(video.Transcription) && string.IsNullOrWhiteSpace(video.Title))
+                Log.Information("Using {Count} comments from PocketBase for {VideoId}", comments.Count, video.TiktokVideoId);
+
+                if (comments.Count == 0 && string.IsNullOrWhiteSpace(video.Transcription) && string.IsNullOrWhiteSpace(video.Title))
                 {
                     Log.Warning("No comments, transcription, or title available for {VideoId}; response generation deferred", video.TiktokVideoId);
                     return;
                 }
 
                 var responseResult = await _responseService.GenerateResponseAsync(
-                    video, video.Transcription ?? string.Empty, responseInputComments);
+                    video, video.Transcription ?? string.Empty, comments);
 
                 if (responseResult.Success)
                 {
@@ -82,9 +90,10 @@ namespace FluxAnswer.Services.Database
                     video.PostedAt = null;
                     video.ResponseGenerated = true;
                     video.ErrorMessage = null;
+                    video.StatusCode = responseResult.StatusCode;
 
                     await UpdateVideoAsync(video);
-                    Log.Information("[OK] Response stored in video record for {VideoId}", video.TiktokVideoId);
+                    Log.Information("[OK] Response stored for {VideoId}", video.TiktokVideoId);
                 }
                 else
                 {
@@ -108,10 +117,7 @@ namespace FluxAnswer.Services.Database
         private async Task UpdateVideoAsync(VideoRecord video)
         {
             if (string.IsNullOrWhiteSpace(video.Id))
-            {
                 throw new InvalidOperationException("Video Id is null or empty, cannot update video entity");
-            }
-
             await _videoRepo.UpdateAsync(video.Id, video);
         }
     }

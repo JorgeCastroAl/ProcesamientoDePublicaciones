@@ -18,6 +18,9 @@ namespace FluxAnswer.Models
 
         [JsonProperty("commentsAnalyzed")]
         public int CommentsAnalyzed { get; set; }
+
+        [JsonProperty("statusCode")]
+        public int StatusCode { get; set; }
     }
 }
 

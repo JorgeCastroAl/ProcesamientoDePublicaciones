@@ -20,7 +20,7 @@ internal static class LicenseValidator
 
         var localAppDataDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TikTokManager");
+            "TikTokSuite");
 
         var machineHash = MachineFingerprint.ComputeCurrentMachineHash();
         var protectedSerialPath = Path.Combine(localAppDataDir, "license.serial.protected.bin");
@@ -42,9 +42,21 @@ internal static class LicenseValidator
         if (!string.IsNullOrWhiteSpace(serial))
         {
             Log.Debug("[LICENSE] Validating serial against current machine fingerprint.");
-            return SerialLicenseService.ValidateSerial(machineHash, serial)
-                ? LicenseValidationResult.Valid("Serial license validated.")
-                : LicenseValidationResult.Invalid("Serial is invalid for this machine.");
+            var serialResult = SerialLicenseService.ValidateSerial(machineHash, serial);
+
+            if (serialResult.IsExpired)
+            {
+                Log.Warning("[LICENSE] Serial expired: {Reason}", serialResult.Reason);
+                return LicenseValidationResult.Invalid($"Serial expirado: {serialResult.Reason}");
+            }
+
+            if (serialResult.IsValid)
+            {
+                Log.Information("[LICENSE] Serial validated. Expires: {Expiration:yyyy-MM}", serialResult.ExpirationDate);
+                return LicenseValidationResult.Valid("Serial license validated.");
+            }
+
+            return LicenseValidationResult.Invalid(serialResult.Reason);
         }
 
         // Legacy fallback for previously-issued JSON licenses.

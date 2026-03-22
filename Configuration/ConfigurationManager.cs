@@ -25,6 +25,8 @@ namespace FluxAnswer.Configuration
         private const bool DefaultRecreateDatabase = false;
         private const bool DefaultSeedDataRestoreEnabled = false;
         private const string DefaultSeedDataDirectory = "SeedData";
+        private const int DefaultSearchMaxAgeDays = 7;
+        private const string DefaultExtractionMode = "yt-dlp";
         private const string DefaultPocketBaseBindIp = "0.0.0.0";
         private const int DefaultPocketBasePort = 8090;
 
@@ -57,6 +59,8 @@ namespace FluxAnswer.Configuration
         public bool RecreateDatabase => _settings.RecreateDatabase ?? DefaultRecreateDatabase;
         public bool SeedDataRestoreEnabled => _settings.SeedDataRestoreEnabled ?? DefaultSeedDataRestoreEnabled;
         public string SeedDataDirectory => _settings.SeedDataDirectory ?? DefaultSeedDataDirectory;
+        public int SearchMaxAgeDays => _settings.SearchMaxAgeDays ?? DefaultSearchMaxAgeDays;
+        public string ExtractionMode => _settings.ExtractionMode ?? DefaultExtractionMode;
 
         public ConfigurationManager(string configFilePath)
         {

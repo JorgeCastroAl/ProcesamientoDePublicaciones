@@ -15,7 +15,7 @@ namespace FluxAnswer.Services.Media
             var possiblePaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TikTokSuite", "Tools", "YtDlp", "yt-dlp.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "yt-dlp.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokSuite", "yt-dlp.exe"),
                 Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Tools", "YtDlp", "yt-dlp.exe")),
                 Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "yt-dlp.exe"),
@@ -36,7 +36,7 @@ namespace FluxAnswer.Services.Media
             var possiblePaths = new[]
             {
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TikTokSuite", "Tools", "FFmpeg", "ffmpeg.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokManager", "ffmpeg.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TikTokSuite", "ffmpeg.exe"),
                 Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "Tools", "FFmpeg", "ffmpeg.exe")),
                 Path.Combine(Environment.CurrentDirectory, "ffmpeg.exe"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe"),

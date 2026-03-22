@@ -76,13 +76,13 @@ namespace FluxAnswer.SystemTray
         {
             var appDataPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "TikTokManager",
+                "TikTokSuite",
                 "branding",
                 "logo.png");
 
             var localAppDataPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "TikTokManager",
+                "TikTokSuite",
                 "branding",
                 "logo.png");
 

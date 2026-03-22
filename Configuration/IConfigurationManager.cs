@@ -28,6 +28,8 @@ namespace FluxAnswer.Configuration
         bool RecreateDatabase { get; }
         bool SeedDataRestoreEnabled { get; }
         string SeedDataDirectory { get; }
+        int SearchMaxAgeDays { get; }
+        string ExtractionMode { get; }
 
         void Reload();
         void DisableOneTimeDatabaseRestoreFlags();

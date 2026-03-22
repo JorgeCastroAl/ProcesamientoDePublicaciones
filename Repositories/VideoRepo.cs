@@ -32,7 +32,7 @@ namespace FluxAnswer.Repositories
 
         public async Task<List<VideoRecord>> GetIncompleteVideosAsync()
         {
-            var filter = "audio_downloaded=false || comments_extracted=false || response_generated=false";
+            var filter = "(comments_extracted=false || response_generated=false || (skip_transcription=false && audio_downloaded=false)) || (response_generated=true && status_code=1 && custom_comments_success=false)";
             try
             {
                 return await GetByFilterAsync(filter);
@@ -47,7 +47,7 @@ namespace FluxAnswer.Repositories
 
         public async Task<VideoRecord?> GetNextIncompleteVideoAsync()
         {
-            var filter = "audio_downloaded=false || comments_extracted=false || response_generated=false";
+            var filter = "(comments_extracted=false || response_generated=false || (skip_transcription=false && audio_downloaded=false)) || (response_generated=true && status_code=1 && custom_comments_success=false)";
             var encodedFilter = Uri.EscapeDataString(filter);
             var url = $"/api/collections/{_collectionName}/records?filter={encodedFilter}&sort=-priority,updated,created&perPage=1&page=1";
 
@@ -151,11 +151,65 @@ namespace FluxAnswer.Repositories
                 return false;
             }
 
-            // Keep the same criteria used by the server-side filter and include legacy status fallback.
-            return !video.AudioDownloaded
-                || !video.CommentsExtracted
-                || !video.ResponseGenerated
-                || string.Equals(video.Status, "pending", StringComparison.OrdinalIgnoreCase);
+            // Pasos 1-4 incompletos
+            if (!video.CommentsExtracted || !video.ResponseGenerated
+                || (!video.SkipTranscription && !video.AudioDownloaded)
+                || string.Equals(video.Status, "pending", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // Paso 5: solo incompleto si status_code=1 y custom_comments aún no generados
+            if (video.ResponseGenerated && video.StatusCode == 1 && !video.CustomCommentsSuccess)
+                return true;
+
+            return false;
+        }
+
+        // ── Queries por etapa del pipeline ──
+
+        public async Task<VideoRecord?> GetNextForAudioAsync()
+        {
+            // Videos que necesitan audio: skip_transcription=false Y audio no descargado
+            var filter = "skip_transcription=false && audio_downloaded=false";
+            return await GetFirstByFilterAsync(filter);
+        }
+
+        public async Task<VideoRecord?> GetNextForCommentsAsync()
+        {
+            // Videos que necesitan extracción de comentarios
+            var filter = "comments_extracted=false";
+            return await GetFirstByFilterAsync(filter);
+        }
+
+        public async Task<VideoRecord?> GetNextForTranscriptionAsync()
+        {
+            // Videos que necesitan transcripción: skip_transcription=false, audio descargado, no transcrito
+            var filter = "skip_transcription=false && audio_downloaded=true && transcription_completed=false";
+            return await GetFirstByFilterAsync(filter);
+        }
+
+        public async Task<VideoRecord?> GetNextForResponseAsync()
+        {
+            // Videos que necesitan respuesta: tienen al menos comentarios o transcripción, pero no response
+            var filter = "response_generated=false && (comments_extracted=true || transcription_completed=true)";
+            return await GetFirstByFilterAsync(filter);
+        }
+
+        public async Task<VideoRecord?> GetNextForCustomCommentsAsync()
+        {
+            // Videos que necesitan custom comments: response generada, custom_comments pendientes
+            var filter = "response_generated=true && custom_comments_success=false";
+            return await GetFirstByFilterAsync(filter);
+        }
+
+        private async Task<VideoRecord?> GetFirstByFilterAsync(string filter)
+        {
+            var encodedFilter = Uri.EscapeDataString(filter);
+            var url = $"/api/collections/{_collectionName}/records?filter={encodedFilter}&sort=-priority,updated,created&perPage=1&page=1";
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return null;
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<PocketBaseListResponse<VideoRecord>>(content);
+            return result?.Items?.FirstOrDefault();
         }
     }
 }

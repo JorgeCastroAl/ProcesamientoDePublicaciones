@@ -40,7 +40,7 @@ namespace FluxAnswer.Services.Api
 
             var logDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "TikTokManager",
+                "TikTokSuite",
                 "logs"
             );
 
@@ -162,12 +162,13 @@ namespace FluxAnswer.Services.Api
 
                             if (apiResponse != null && !string.IsNullOrEmpty(apiResponse.Opinion))
                             {
-                                Log.Information("Response generated successfully for video: {VideoId} - Profile: {Profile}, Comments: {Count}",
-                                    video.TiktokVideoId, apiResponse.ProfileUsed, apiResponse.CommentsAnalyzed);
+                                Log.Information("Response generated successfully for video: {VideoId} - Profile: {Profile}, Comments: {Count}, StatusCode: {StatusCode}",
+                                    video.TiktokVideoId, apiResponse.ProfileUsed, apiResponse.CommentsAnalyzed, apiResponse.StatusCode);
                                 return new ResponseResult
                                 {
                                     Success = true,
-                                    ResponseText = apiResponse.Opinion
+                                    ResponseText = apiResponse.Opinion,
+                                    StatusCode = apiResponse.StatusCode
                                 };
                             }
 
@@ -437,7 +438,7 @@ namespace FluxAnswer.Services.Api
                 video.TiktokVideoId,
                 totalCreated);
 
-            return (!hadAccountFailures, totalCreated);
+            return (totalCreated > 0, totalCreated);
         }
 
         private async Task<string?> ModifyCommentAsync(

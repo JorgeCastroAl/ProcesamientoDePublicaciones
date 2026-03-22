@@ -29,7 +29,7 @@ namespace FluxAnswer.Services
             _pocketBasePath = pocketBasePath ?? FindPocketBaseExecutable();
             _dataDirectory = dataDirectory ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "TikTokManager",
+                "TikTokSuite",
                 "pocketbase_data"
             );
 
@@ -216,7 +216,7 @@ namespace FluxAnswer.Services
                 Path.Combine(baseDirectory, "pocketbase", "pocketbase.exe"),
                 Path.Combine(currentDirectory, "pocketbase.exe"),
                 Path.Combine(currentDirectory, "pocketbase", "pocketbase.exe"),
-                Path.Combine(localAppDataPath, "TikTokManager", "pocketbase.exe"),
+                Path.Combine(localAppDataPath, "TikTokSuite", "pocketbase.exe"),
                 "pocketbase.exe" // Last fallback: PATH
             };
 

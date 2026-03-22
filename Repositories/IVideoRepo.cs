@@ -13,6 +13,13 @@ namespace FluxAnswer.Repositories
         Task<List<VideoRecord>> GetByStatusAsync(string status);
         Task<List<VideoRecord>> GetIncompleteVideosAsync();
         Task<VideoRecord?> GetNextIncompleteVideoAsync();
+
+        // Queries por etapa del pipeline
+        Task<VideoRecord?> GetNextForAudioAsync();
+        Task<VideoRecord?> GetNextForCommentsAsync();
+        Task<VideoRecord?> GetNextForTranscriptionAsync();
+        Task<VideoRecord?> GetNextForResponseAsync();
+        Task<VideoRecord?> GetNextForCustomCommentsAsync();
     }
 }
 

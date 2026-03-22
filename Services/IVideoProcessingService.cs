@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using FluxAnswer.Extraction;
 
 namespace FluxAnswer.Services
 {
@@ -9,8 +10,10 @@ namespace FluxAnswer.Services
     public interface IVideoProcessingService
     {
         ServiceState State { get; }
+        ExtractionMode ExtractionMode { get; }
         Task StartAsync();
         Task StopAsync();
+        Task SetExtractionModeAsync(ExtractionMode mode);
         Task<ServiceStatistics> GetStatisticsAsync();
         event EventHandler<ServiceStateChangedEventArgs> StateChanged;
         event EventHandler<ErrorEventArgs> ErrorOccurred;

@@ -66,6 +66,12 @@ namespace FluxAnswer.Configuration
 
         [JsonProperty("seed_data_directory")]
         public string? SeedDataDirectory { get; set; }
+
+        [JsonProperty("search_max_age_days")]
+        public int? SearchMaxAgeDays { get; set; }
+
+        [JsonProperty("extraction_mode")]
+        public string? ExtractionMode { get; set; }
     }
 }
 

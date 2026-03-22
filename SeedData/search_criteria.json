@@ -1,0 +1,539 @@
+{
+    "schema": [
+        {
+            "system": false,
+            "id": "keyword",
+            "name": "keyword",
+            "type": "text",
+            "required": true,
+            "presentable": true,
+            "unique": false,
+            "options": { "min": null, "max": null, "pattern": "" }
+        },
+        {
+            "system": false,
+            "id": "is_active",
+            "name": "is_active",
+            "type": "bool",
+            "required": false,
+            "presentable": false,
+            "unique": false,
+            "options": {}
+        }
+    ],
+    "records": [
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_keiko_fujimori",
+            "is_active": true,
+            "keyword": "Keiko Fujimori",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_fuerza_popular",
+            "is_active": true,
+            "keyword": "Fuerza Popular",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_cesar_acuna",
+            "is_active": true,
+            "keyword": "César Acuña Peralta",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_alianza_progreso",
+            "is_active": true,
+            "keyword": "Alianza para el Progreso",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_williams_zapata",
+            "is_active": true,
+            "keyword": "José Daniel Williams Zapata",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_avanza_pais",
+            "is_active": true,
+            "keyword": "Avanza País",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_belaunde_llosa",
+            "is_active": true,
+            "keyword": "Rafael Belaunde Llosa",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_libertad_popular",
+            "is_active": true,
+            "keyword": "Libertad Popular",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_sanchez_palomino",
+            "is_active": true,
+            "keyword": "Roberto Sánchez Palomino",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_juntos_peru",
+            "is_active": true,
+            "keyword": "Juntos por el Perú",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_paz_de_la_barra",
+            "is_active": true,
+            "keyword": "Álvaro Paz de la Barra",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_fe_en_el_peru",
+            "is_active": true,
+            "keyword": "Fe en el Perú",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_molinelli",
+            "is_active": true,
+            "keyword": "Fiorella Molinelli",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_fuerza_libertad",
+            "is_active": true,
+            "keyword": "Alianza Fuerza y Libertad",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_lopez_chau",
+            "is_active": true,
+            "keyword": "Pablo López Chau",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_ahora_nacion",
+            "is_active": true,
+            "keyword": "Ahora Nación",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_atencio_sotomayor",
+            "is_active": true,
+            "keyword": "Ronald Atencio Sotomayor",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_venceremos",
+            "is_active": true,
+            "keyword": "Alianza Electoral Venceremos",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_valderrama_pena",
+            "is_active": true,
+            "keyword": "Pitter Valderrama Peña",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_partido_aprista",
+            "is_active": true,
+            "keyword": "Partido Aprista Peruano",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_george_forsyth",
+            "is_active": true,
+            "keyword": "George Forsyth",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_somos_peru",
+            "is_active": true,
+            "keyword": "Somos Perú",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_lopez_aliaga",
+            "is_active": true,
+            "keyword": "Rafael López Aliaga",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_renovacion_popular",
+            "is_active": true,
+            "keyword": "Renovación Popular",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_vizcarra_cornejo",
+            "is_active": true,
+            "keyword": "Mario Vizcarra Cornejo",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_peru_primero",
+            "is_active": true,
+            "keyword": "Perú Primero",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_politica",
+            "is_active": true,
+            "keyword": "politica",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_elecciones",
+            "is_active": true,
+            "keyword": "elecciones",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_elecciones_2026",
+            "is_active": true,
+            "keyword": "elecciones 2026",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_vladimir_cerron",
+            "is_active": true,
+            "keyword": "Vladimir Cerrón",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_jose_luna_galvez",
+            "is_active": true,
+            "keyword": "José Luna Gálvez",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_raul_noblecilla",
+            "is_active": true,
+            "keyword": "Raúl Noblecilla",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_cecilia_garcia",
+            "is_active": true,
+            "keyword": "Cecilia García",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_guido_bellido",
+            "is_active": true,
+            "keyword": "Guido Bellido",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_alejandro_soto",
+            "is_active": true,
+            "keyword": "Alejandro Soto Reyes",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_rospigliosi",
+            "is_active": true,
+            "keyword": "Fernando Rospigliosi",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_antauro_humala",
+            "is_active": true,
+            "keyword": "Antauro Humala",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_guillermo_bermejo",
+            "is_active": true,
+            "keyword": "Guillermo Bermejo",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_carlos_alvarez",
+            "is_active": true,
+            "keyword": "Carlos Álvarez",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_fernandez_bazan",
+            "is_active": true,
+            "keyword": "Arturo Fernández Bazán",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_zaira_arias",
+            "is_active": true,
+            "keyword": "Zaira Arias",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_waldemar_cerron",
+            "is_active": true,
+            "keyword": "Waldemar Cerrón",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_edgar_tello",
+            "is_active": true,
+            "keyword": "Edgar Tello",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_heidy_juarez",
+            "is_active": true,
+            "keyword": "Heidy Juárez",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_darwin_espinoza",
+            "is_active": true,
+            "keyword": "Darwin Espinoza",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_ricardo_belmont",
+            "is_active": true,
+            "keyword": "Ricardo Belmont",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_fernando_olivera",
+            "is_active": true,
+            "keyword": "Fernando Olivera",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_carmen_alva",
+            "is_active": true,
+            "keyword": "María del Carmen Alva",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_richard_rojas",
+            "is_active": true,
+            "keyword": "Richard Rojas",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_zosimo_cardenas",
+            "is_active": true,
+            "keyword": "Zósimo Cárdenas",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_jorge_perez",
+            "is_active": true,
+            "keyword": "Jorge Pérez",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_luis_galarreta",
+            "is_active": true,
+            "keyword": "Luis Galarreta",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_miguel_torres",
+            "is_active": true,
+            "keyword": "Miguel Torres",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_alex_gonzalez",
+            "is_active": true,
+            "keyword": "Alex González",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_silvia_monteza",
+            "is_active": true,
+            "keyword": "Silvia Monteza",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_edwin_martinez",
+            "is_active": true,
+            "keyword": "Edwin Martínez",
+            "updated": "2026-03-20 00:00:00.000Z"
+        },
+        {
+            "collectionId": "search_criteria",
+            "collectionName": "search_criteria",
+            "created": "2026-03-20 00:00:00.000Z",
+            "id": "sc_kelly_portalatino",
+            "is_active": true,
+            "keyword": "Kelly Portalatino",
+            "updated": "2026-03-20 00:00:00.000Z"
+        }
+    ]
+}

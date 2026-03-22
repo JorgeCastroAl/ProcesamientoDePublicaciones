@@ -10,6 +10,7 @@
     <Authors>CYLON NET EIRL</Authors>
     <Product>FluxAnswer</Product>
     <Copyright>Copyright (c) CYLON NET EIRL</Copyright>
+    <ApplicationIcon>..\Installer\Assets\App.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,6 +40,9 @@
     <Content Include="branding\logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Update="Scripts\tiktok_search.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

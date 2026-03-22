@@ -15,13 +15,15 @@ namespace FluxAnswer.Extraction
         private readonly IVideoRepo _videoRepo;
         private readonly IYtDlpWrapper _ytDlp;
         private readonly ISocialNetworkRepo _socialNetworkRepo;
+        private readonly Configuration.IConfigurationManager _config;
         private string? _tiktokSocialNetworkId;
 
-        public VideoExtractionService(IVideoRepo videoRepo, IYtDlpWrapper ytDlp, ISocialNetworkRepo socialNetworkRepo)
+        public VideoExtractionService(IVideoRepo videoRepo, IYtDlpWrapper ytDlp, ISocialNetworkRepo socialNetworkRepo, Configuration.IConfigurationManager config)
         {
             _videoRepo = videoRepo;
             _ytDlp = ytDlp;
             _socialNetworkRepo = socialNetworkRepo;
+            _config = config;
         }
 
         public async Task<ExtractionResult> ExtractVideosAsync(AccountToFollow account)
@@ -85,7 +87,8 @@ namespace FluxAnswer.Extraction
                             Title = video.Title,
                             Author = video.Uploader,
                             UploadDate = video.GetUploadDateTime() ?? DateTime.UtcNow,
-                            Status = "pending"
+                            Status = "pending",
+                            SkipTranscription = _config.SkipTranscription
                         };
 
                         await _videoRepo.CreateAsync(videoRecord);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using PocketBase.Framework.Attributes;
@@ -61,9 +60,17 @@ namespace FluxAnswer.Models
         [PocketBaseField(FieldType = "bool", Required = false)]
         public bool IsActive { get; set; } = true;
 
-        [JsonProperty("accounts_to_follow_ids")]
-        [PocketBaseField(FieldType = "relation", RelationCollection = "account_to_follow", MaxSelect = -1, Required = false)]
-        public List<string> AccountsToFollowIds { get; set; } = new List<string>();
+        [JsonProperty("proxy_url")]
+        [PocketBaseField(FieldType = "text", Required = false)]
+        public string? ProxyUrl { get; set; }
+
+        [JsonProperty("home_url")]
+        [PocketBaseField(FieldType = "text", Required = false)]
+        public string HomeUrl { get; set; } = "https://www.tiktok.com";
+
+        [JsonProperty("auto_login")]
+        [PocketBaseField(FieldType = "bool", Required = false)]
+        public bool AutoLogin { get; set; }
 
         [JsonProperty("created")]
         public DateTime CreatedAt { get; set; }

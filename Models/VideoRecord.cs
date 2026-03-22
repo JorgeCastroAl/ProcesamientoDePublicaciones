@@ -104,6 +104,14 @@ namespace FluxAnswer.Models
         [PocketBaseField(FieldType = "number")]
         public int CustomCommentsGeneratedCount { get; set; } = 0;
 
+        [JsonProperty("status_code")]
+        [PocketBaseField(FieldType = "number")]
+        public int StatusCode { get; set; } = 0;
+
+        [JsonProperty("skip_transcription")]
+        [PocketBaseField(FieldType = "bool")]
+        public bool SkipTranscription { get; set; } = false;
+
         [JsonProperty("created")]
         public DateTime CreatedAt { get; set; }
 

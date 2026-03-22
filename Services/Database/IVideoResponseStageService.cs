@@ -9,6 +9,6 @@ namespace FluxAnswer.Services.Database
     /// </summary>
     public interface IVideoResponseStageService
     {
-        Task ProcessAsync(VideoRecord video, bool skipTranscription, List<CommentData>? comments = null);
+        Task ProcessAsync(VideoRecord video);
     }
 }

@@ -8,30 +8,29 @@ using Serilog;
 using FluxAnswer.Configuration;
 using FluxAnswer.Repositories;
 using FluxAnswer.Models;
-using FluxAnswer.Services.Media;
-using FluxAnswer.Services.Scraping.TikTok;
-using FluxAnswer.Services.AI;
 using FluxAnswer.Services.Database;
 using FluxAnswer.Services.Pipeline;
 
 namespace FluxAnswer.Pipeline.TikTok
 {
     /// <summary>
-    /// Manages continuous video processing pipeline.
+    /// Gestiona 5 hilos independientes, uno por cada etapa del pipeline.
+    /// Cada hilo consulta PocketBase por el siguiente video que necesita su etapa específica.
     /// </summary>
     public class TikTokPipelineManager : ITikTokPipelineManager
     {
         private readonly IVideoRepo _videoRepo;
-        private readonly ICommentsExtractionService _commentsService;
         private readonly IAudioStageService _audioStageService;
+        private readonly ICommentsStageService _commentsStageService;
         private readonly ITranscriptionStageService _transcriptionStageService;
         private readonly IVideoResponseStageService _responseStageService;
         private readonly IBotAccountVideoStageService _botAccountVideoStageService;
         private readonly IConfigurationManager _config;
-        private CancellationTokenSource? _cancellationTokenSource;
-        private Task? _processingTask;
+
+        private CancellationTokenSource? _cts;
+        private readonly List<Task> _workers = new();
         private bool _isRunning;
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private DateTime? _lastProcessedTime;
 
         public event EventHandler<TikTokVideoProcessedEventArgs>? ItemProcessed;
@@ -39,16 +38,16 @@ namespace FluxAnswer.Pipeline.TikTok
 
         public TikTokPipelineManager(
             IVideoRepo videoRepo,
-            ICommentsExtractionService commentsService,
             IAudioStageService audioStageService,
+            ICommentsStageService commentsStageService,
             ITranscriptionStageService transcriptionStageService,
             IVideoResponseStageService responseStageService,
             IBotAccountVideoStageService botAccountVideoStageService,
             IConfigurationManager config)
         {
             _videoRepo = videoRepo;
-            _commentsService = commentsService;
             _audioStageService = audioStageService;
+            _commentsStageService = commentsStageService;
             _transcriptionStageService = transcriptionStageService;
             _responseStageService = responseStageService;
             _botAccountVideoStageService = botAccountVideoStageService;
@@ -61,16 +60,22 @@ namespace FluxAnswer.Pipeline.TikTok
             {
                 if (_isRunning)
                 {
-                    Log.Warning("Processing pipeline manager is already running");
+                    Log.Warning("Pipeline manager is already running");
                     return Task.CompletedTask;
                 }
 
                 _isRunning = true;
-                _cancellationTokenSource = new CancellationTokenSource();
+                _cts = new CancellationTokenSource();
+                var ct = _cts.Token;
 
-                _processingTask = Task.Run(() => ProcessingLoopAsync(_cancellationTokenSource.Token));
+                _workers.Clear();
+                _workers.Add(Task.Run(() => StageLoopAsync("Audio", _videoRepo.GetNextForAudioAsync, ProcessAudioAsync, ct)));
+                _workers.Add(Task.Run(() => StageLoopAsync("Comments", _videoRepo.GetNextForCommentsAsync, ProcessCommentsAsync, ct)));
+                _workers.Add(Task.Run(() => StageLoopAsync("Transcription", _videoRepo.GetNextForTranscriptionAsync, ProcessTranscriptionAsync, ct)));
+                _workers.Add(Task.Run(() => StageLoopAsync("Response", _videoRepo.GetNextForResponseAsync, ProcessResponseAsync, ct)));
+                _workers.Add(Task.Run(() => StageLoopAsync("CustomComments", _videoRepo.GetNextForCustomCommentsAsync, ProcessCustomCommentsAsync, ct)));
 
-                Log.Information("Processing pipeline manager started");
+                Log.Information("Pipeline manager started: 5 stage workers running");
             }
 
             return Task.CompletedTask;
@@ -82,270 +87,160 @@ namespace FluxAnswer.Pipeline.TikTok
             {
                 if (!_isRunning)
                 {
-                    Log.Warning("Processing pipeline manager is not running");
+                    Log.Warning("Pipeline manager is not running");
                     return;
                 }
 
                 _isRunning = false;
-                _cancellationTokenSource?.Cancel();
+                _cts?.Cancel();
             }
 
-            if (_processingTask != null)
-            {
-                await _processingTask;
-            }
-
-            Log.Information("Processing pipeline manager stopped");
+            await Task.WhenAll(_workers);
+            _workers.Clear();
+            Log.Information("Pipeline manager stopped");
         }
 
         public async Task<TikTokPipelineStatistics> GetStatisticsAsync()
         {
             try
             {
-                // Query database for real-time statistics
                 var allVideos = await _videoRepo.GetAllAsync();
-                
-                var stats = new TikTokPipelineStatistics
+                return new TikTokPipelineStatistics
                 {
-                    PendingCount = allVideos.Count(v => v.Status.ToLower() == "pending"),
-                    ProcessingCount = allVideos.Count(v => v.Status.ToLower() == "processing"),
-                    CompletedCount = allVideos.Count(v => v.Status.ToLower() == "completed"),
-                    FailedCount = allVideos.Count(v => v.Status.ToLower() == "failed"),
+                    PendingCount = allVideos.Count(v => v.Status.Equals("pending", StringComparison.OrdinalIgnoreCase)),
+                    ProcessingCount = allVideos.Count(v => v.Status.Equals("processing", StringComparison.OrdinalIgnoreCase)),
+                    CompletedCount = allVideos.Count(v => v.Status.Equals("completed", StringComparison.OrdinalIgnoreCase)),
+                    FailedCount = allVideos.Count(v => v.Status.Equals("failed", StringComparison.OrdinalIgnoreCase)),
                     LastProcessedTime = _lastProcessedTime
                 };
-
-                return stats;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error getting processing statistics");
-                return new TikTokPipelineStatistics
-                {
-                    LastProcessedTime = _lastProcessedTime,
-                    LastError = ex.Message
-                };
+                Log.Error(ex, "Error getting pipeline statistics");
+                return new TikTokPipelineStatistics { LastProcessedTime = _lastProcessedTime, LastError = ex.Message };
             }
         }
 
-        private async Task ProcessingLoopAsync(CancellationToken cancellationToken)
+        // ── Loop genérico por etapa ──
+
+        private async Task StageLoopAsync(
+            string stageName,
+            Func<Task<VideoRecord?>> queryNext,
+            Func<VideoRecord, Task> process,
+            CancellationToken ct)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            var pollSeconds = _config.ProcessingPollIntervalSeconds;
+
+            while (!ct.IsCancellationRequested)
             {
                 try
                 {
-                    // Get next incomplete video directly from database (FIFO by updated, created)
-                    Log.Debug("Querying database for next incomplete video...");
-                    var video = await _videoRepo.GetNextIncompleteVideoAsync();
+                    var video = await queryNext();
 
                     if (video == null)
                     {
-                        // No videos to process, wait
-                        Log.Debug("No incomplete videos, waiting {Seconds}s...", _config.ProcessingPollIntervalSeconds);
-                        await Task.Delay(_config.ProcessingPollIntervalSeconds * 1000, cancellationToken);
+                        const int idleSeconds = 180; // 3 minutes
+                        Log.Debug("[{Stage}] No videos pending, sleeping {Seconds}s...", stageName, idleSeconds);
+                        await Task.Delay(idleSeconds * 1000, ct);
                         continue;
                     }
 
-                    Log.Information("Processing next incomplete video: {VideoId}", video.TiktokVideoId);
-                    await ProcessNextVideoAsync(video);
-
+                    Log.Information("[{Stage}] Processing video: {VideoId}", stageName, video.TiktokVideoId);
+                    await process(video);
                     _lastProcessedTime = DateTime.UtcNow;
                 }
                 catch (OperationCanceledException)
                 {
-                    Log.Information("Processing loop cancelled");
+                    Log.Information("[{Stage}] Worker cancelled", stageName);
                     break;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Processing thread crashed, restarting in 10 seconds...");
-                    await Task.Delay(10000, cancellationToken);
+                    Log.Error(ex, "[{Stage}] Worker error, restarting in 10s...", stageName);
+                    await Task.Delay(10000, ct);
                 }
             }
         }
 
-        private bool IsFullyCompleted(VideoRecord video)
+        // ── Procesadores por etapa ──
+
+        private async Task ProcessAudioAsync(VideoRecord video)
         {
-            // Si skip_transcription estÃ¡ activo, no requerimos audio/transcripciÃ³n
-            bool audioOk = _config.SkipTranscription || video.AudioDownloaded;
-            bool transcriptionOk = _config.SkipTranscription || video.TranscriptionCompleted;
-            
-            // Video is fully completed if all required stages are done
-            return audioOk && 
-                   video.CommentsExtracted && 
-                   transcriptionOk && 
-                     video.ResponseGenerated &&
-                     video.CustomCommentsSuccess;
+            var audioResult = await _audioStageService.ProcessAsync(video, requiresAudio: true);
+
+            // Limpiar archivo temporal si se descargó
+            if (audioResult.NeedsCleanup && !string.IsNullOrEmpty(audioResult.AudioPath) && File.Exists(audioResult.AudioPath))
+            {
+                // No borrar aquí: el hilo de transcripción lo necesita.
+                // Se borrará después de transcribir.
+            }
+
+            FireVideoProcessed(video, true);
         }
 
-        private async Task ProcessNextVideoAsync(VideoRecord video)
+        private async Task ProcessCommentsAsync(VideoRecord video)
         {
-            var startTime = DateTime.UtcNow;
-            string? audioPath = null;
-            bool needsAudioFile = false;
-            var extractedComments = new List<CommentData>();
+            await _commentsStageService.ProcessAsync(video);
+            FireVideoProcessed(video, true);
+        }
 
+        private async Task ProcessTranscriptionAsync(VideoRecord video)
+        {
+            string? audioPath = null;
             try
             {
-                Log.Information("========== Processing video: {VideoId} ==========", video.TiktokVideoId);
-                Log.Information("Stage status - Audio: {Audio}, Comments: {Comments}, Transcription: {Trans}, Response: {Resp}",
-                    video.AudioDownloaded, video.CommentsExtracted, video.TranscriptionCompleted, video.ResponseGenerated);
-
-                bool requiresAudio = !_config.SkipTranscription && !video.TranscriptionCompleted;
-
-                // Step 1: Download MP3 (only when transcription is required)
-                await Task.Run(async () =>
-                {
-                    var audioResult = await _audioStageService.ProcessAsync(video, requiresAudio);
-                    audioPath = audioResult.AudioPath;
-                    if (audioResult.NeedsCleanup)
-                    {
-                        needsAudioFile = true;
-                    }
-                });
-
-                // Step 2: Extract comments (if not already done)
-                if (!video.CommentsExtracted)
-                {
-                    try
-                    {
-                        Log.Information("Step 2/4: Extracting comments for {VideoId}", video.TiktokVideoId);
-                        video.SetStatus(VideoStatus.ExtractingComments);
-                        await UpdateVideoAsync(video);
-                        
-                        var comments = await _commentsService.ExtractCommentsAsync(video.VideoUrl, _config.CommentsExtractionLimit);
-                        extractedComments = comments;
-                        Log.Information("[OK] Extracted {Count} comments for {VideoId}", comments.Count, video.TiktokVideoId);
-
-                        // Mark extraction stage as completed even when no comments are returned.
-                        // Response stage can still use transcription/title as fallback input.
-                        video.CommentsExtracted = true;
-                        video.ErrorMessage = null;
-                        await UpdateVideoAsync(video);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "[ERROR] Failed to extract comments for {VideoId}: {Error}", 
-                            video.TiktokVideoId, ex.Message);
-                        // Keep as not extracted when extraction fails
-                        video.CommentsExtracted = false;
-                        video.ErrorMessage = $"Comments extraction failed: {ex.Message}";
-                        await UpdateVideoAsync(video);
-                    }
-                }
-                else
-                {
-                    Log.Information("[OK] Step 2/4: Comments already extracted, skipping");
-                }
-
-                // Step 3: Transcribe audio (if not already done and not skipped by config)
-                await Task.Run(async () =>
-                {
-                    var downloadedInTranscription = await _transcriptionStageService.ProcessAsync(
-                        video,
-                        _config.SkipTranscription,
-                        audioPath);
-
-                    if (downloadedInTranscription)
-                    {
-                        needsAudioFile = true;
-                    }
-                });
-
-                // Step 4: Generate response in independent thread
-                await Task.Run(async () =>
-                {
-                    await _responseStageService.ProcessAsync(video, _config.SkipTranscription, extractedComments);
-                });
-
-                // Step 5: Generate bot-account-video records in independent thread
-                await Task.Run(async () =>
-                {
-                    await _botAccountVideoStageService.ProcessAsync(video);
-                });
-
-                // Completion is now decided by the BotAccountVideo stage
-                if (IsFullyCompleted(video))
-                {
-                    video.SetStatus(VideoStatus.Completed);
-                    if (string.IsNullOrEmpty(video.ErrorMessage) ||
-                        !video.ErrorMessage.Contains("failed"))
-                    {
-                        video.ErrorMessage = null;
-                    }
-                    await UpdateVideoAsync(video);
-
-                    Log.Information("========== [OK] All stages completed for video: {VideoId} ==========",
-                        video.TiktokVideoId);
-                }
-                else
-                {
-                    Log.Warning("[WARN] Video {VideoId} has incomplete stages", video.TiktokVideoId);
-                }
-
-                var duration = DateTime.UtcNow - startTime;
-
-                // Fire event
-                var processedEventArgs = new TikTokVideoProcessedEventArgs(video)
-                {
-                    Success = IsFullyCompleted(video),
-                    ProcessingDuration = duration
-                };
-                ItemProcessed?.Invoke(this, processedEventArgs);
-                VideoProcessed?.Invoke(this, processedEventArgs);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "[ERROR] Video processing failed for {VideoId} at status {Status}: {Error}", 
-                    video.TiktokVideoId, video.Status, ex.Message);
-                Log.Error("Stack trace: {StackTrace}", ex.StackTrace);
-
-                // Mark video as failed
-                video.SetStatus(VideoStatus.Failed);
-                video.ErrorMessage = $"Failed at {video.Status}: {ex.Message}";
-                await UpdateVideoAsync(video);
-
-                var duration = DateTime.UtcNow - startTime;
-
-                // Fire event
-                var processedEventArgs = new TikTokVideoProcessedEventArgs(video)
-                {
-                    Success = false,
-                    ErrorMessage = ex.Message,
-                    ProcessingDuration = duration
-                };
-                ItemProcessed?.Invoke(this, processedEventArgs);
-                VideoProcessed?.Invoke(this, processedEventArgs);
+                await _transcriptionStageService.ProcessAsync(video, video.SkipTranscription, audioPath);
             }
             finally
             {
-                // Cleanup temporary audio file only if we downloaded it in this run
-                if (needsAudioFile && !string.IsNullOrEmpty(audioPath) && File.Exists(audioPath))
+                // Limpiar archivo de audio temporal después de transcribir
+                var tempPath = Path.Combine(_config.TempDirectory, $"{video.TiktokVideoId}.mp3");
+                if (File.Exists(tempPath))
                 {
-                    try
-                    {
-                        File.Delete(audioPath);
-                        Log.Debug("[OK] Cleaned up temporary audio file: {Path}", audioPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Warning(ex, "Failed to delete temporary audio file: {Path}", audioPath);
-                    }
+                    try { File.Delete(tempPath); Log.Debug("Cleaned up audio: {Path}", tempPath); }
+                    catch (Exception ex) { Log.Warning(ex, "Failed to delete audio: {Path}", tempPath); }
                 }
             }
+
+            FireVideoProcessed(video, true);
+        }
+
+        private async Task ProcessResponseAsync(VideoRecord video)
+        {
+            await _responseStageService.ProcessAsync(video);
+            FireVideoProcessed(video, video.ResponseGenerated);
+        }
+
+        private async Task ProcessCustomCommentsAsync(VideoRecord video)
+        {
+            await _botAccountVideoStageService.ProcessAsync(video);
+
+            // Marcar como completado si custom comments terminaron
+            if (video.CustomCommentsSuccess)
+            {
+                video.SetStatus(VideoStatus.Completed);
+                video.ErrorMessage = null;
+                await UpdateVideoAsync(video);
+                Log.Information("[OK] Video {VideoId} fully completed", video.TiktokVideoId);
+            }
+
+            FireVideoProcessed(video, video.CustomCommentsSuccess);
+        }
+
+        // ── Helpers ──
+
+        private void FireVideoProcessed(VideoRecord video, bool success)
+        {
+            var args = new TikTokVideoProcessedEventArgs(video) { Success = success };
+            ItemProcessed?.Invoke(this, args);
+            VideoProcessed?.Invoke(this, args);
         }
 
         private async Task UpdateVideoAsync(VideoRecord video)
         {
             if (string.IsNullOrWhiteSpace(video.Id))
-            {
-                throw new InvalidOperationException("Video Id is null or empty, cannot update video entity");
-            }
-
+                throw new InvalidOperationException("Video Id is null or empty");
             await _videoRepo.UpdateAsync(video.Id, video);
         }
-
     }
 }
-
-
-
