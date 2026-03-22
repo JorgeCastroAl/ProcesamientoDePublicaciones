@@ -15,20 +15,27 @@ namespace FluxAnswer.SystemTray
 
         public static Icon GetApplicationIcon()
         {
+            // Primero intentar cargar App.ico nativo (instalado en Assets/)
+            foreach (var icoPath in GetCandidateIcoPaths())
+            {
+                if (!File.Exists(icoPath)) continue;
+                try
+                {
+                    return new Icon(icoPath);
+                }
+                catch { }
+            }
+
+            // Fallback: logo.png convertido a icono
             foreach (var logoPath in GetCandidateLogoPaths())
             {
-                if (!File.Exists(logoPath))
-                {
-                    continue;
-                }
-
+                if (!File.Exists(logoPath)) continue;
                 try
                 {
                     using var stream = File.OpenRead(logoPath);
                     using var image = Image.FromStream(stream);
                     using var bitmap = CreateTransparentBrandBitmap(image, 64, 64);
                     var hIcon = bitmap.GetHicon();
-
                     try
                     {
                         using var icon = Icon.FromHandle(hIcon);
@@ -39,10 +46,7 @@ namespace FluxAnswer.SystemTray
                         DestroyIcon(hIcon);
                     }
                 }
-                catch
-                {
-                    // Try the next path.
-                }
+                catch { }
             }
 
             return SystemIcons.Application;
@@ -70,6 +74,15 @@ namespace FluxAnswer.SystemTray
             }
 
             return null;
+        }
+
+        private static string[] GetCandidateIcoPaths()
+        {
+            // En producción: {app}\Assets\App.ico (junto al exe de FluxAnswer)
+            var assetsPath = Path.Combine(AppContext.BaseDirectory, "..", "Assets", "App.ico");
+            // También buscar junto al exe directamente
+            var localPath = Path.Combine(AppContext.BaseDirectory, "Assets", "App.ico");
+            return new[] { assetsPath, localPath };
         }
 
         private static string[] GetCandidateLogoPaths()

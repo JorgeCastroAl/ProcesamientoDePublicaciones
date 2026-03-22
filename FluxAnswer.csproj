@@ -40,6 +40,9 @@
     <Content Include="branding\logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\App.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Update="Scripts\tiktok_search.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
